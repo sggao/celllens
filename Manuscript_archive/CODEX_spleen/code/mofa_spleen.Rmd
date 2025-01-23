@@ -1,0 +1,103 @@
+---
+title: "RF_imp"
+output: html_document
+---
+
+mofa on spleen test
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("MOFA2")
+```
+
+
+```{r}
+library(MOFA2)
+
+# read in view data
+df1 = read.csv('./features_and_metadataV2.csv')
+features_names = c('CD45',
+        'Ly6C',
+        'TCR',
+        'Ly6G',
+        'CD19',
+        'CD169',
+        'CD106',
+        'CD3',
+        'CD1632',
+        'CD8a',
+        'CD90',
+        'F480',
+        'CD11c',
+        'Ter119',
+        'CD11b',
+        'IgD',
+        'CD27',
+        'CD5',
+        'CD79b',
+        'CD71',
+        'CD31',
+        'CD4',
+        'IgM',
+        'B220',
+        'ERTR7',
+        'MHCII',
+        'CD35',
+        'CD2135',
+        'CD44',
+        'nucl',
+        'NKp46')
+df12 = df1[,features_names]
+
+library(reshape2)
+df12_s=as.data.frame(scale(df12))
+df12_s$id = c(1:nrow(df12_s))
+df12_m = melt(df12_s, id = 'id')
+df12_m$view = 'view_0'
+```
+
+
+```{r}
+df2 = read.csv('./cell_nbhd_res0.5_k20_0325.csv')
+df2$X <- NULL
+
+###
+df2_s=as.data.frame(scale(df2))
+df2_s$id = c(1:nrow(df2_s))
+df2_m = melt(df2_s, id = 'id')
+df2_m$view = 'view_1'
+```
+
+
+```{r}
+mofa_input = rbind(df12_m, df2_m)
+colnames(mofa_input) = c('sample', 'feature', 'value', 'view')
+
+### all just default option
+MOFAobject <- create_mofa(mofa_input)
+data_opts <- get_default_data_options(MOFAobject)
+model_opts <- get_default_model_options(MOFAobject)
+head(model_opts)
+train_opts <- get_default_training_options(MOFAobject)
+
+MOFAobject <- prepare_mofa(
+  object = MOFAobject,
+  data_options = data_opts,
+  model_options = model_opts,
+  training_options = train_opts
+)
+
+outfile = file.path(getwd(),"model.hdf5")
+MOFAobject.trained <- run_mofa(MOFAobject, outfile)
+```
+
+```{r}
+mofa_res = MOFAobject.trained@expectations$Z$single_group
+write.csv(mofa_res, './mofa_fc8.csv', row.names = FALSE)
+```
+
+
+
+

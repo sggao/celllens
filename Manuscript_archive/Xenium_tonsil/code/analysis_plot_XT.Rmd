@@ -1,0 +1,463 @@
+---
+title: "tonsil_plot"
+output: html_document
+---
+
+################## make metrics plot
+
+```{r}
+metrics = read.csv("../data/CH_result_xton.csv") # metrics prev calced
+
+colorv = c("#f6511d","#ffb400","#00a6ed","#7fb800","#A149FA","#FB9AD1", "#94FFD8")
+names(colorv) = c('ch_snap', 'ch_feature', 'ch_concact', 'ch_muse', 'ch_spice', 'ch_cca', 'ch_mofa')
+# CH
+
+p = ggplot(metrics,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen CH") + scale_fill_manual(values = colorv) + scale_color_manual(values = colorv)
+ggsave("../plots/xton_ch.svg", height = 3, width = 5)
+p
+```
+
+
+```{r}
+metrics = read.csv("../data/SS_result_xton.csv") # metrics prev calced
+
+colorv = c("#f6511d","#ffb400","#00a6ed","#7fb800","#A149FA","#FB9AD1", "#94FFD8")
+names(colorv) = c('ch_snap', 'ch_feature', 'ch_concact', 'ch_muse', 'ch_spice', 'ch_cca', 'ch_mofa')
+# CH
+
+p = ggplot(metrics,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen SS") + scale_fill_manual(values = colorv) + scale_color_manual(values = colorv)
+ggsave("../plots/ss_xton.svg", height = 3, width = 5)
+p
+```
+
+
+```{r}
+metrics = read.csv("../data/DB_result_xton.csv") # metrics prev calced
+
+colorv = c("#f6511d","#ffb400","#00a6ed","#7fb800","#A149FA","#FB9AD1", "#94FFD8")
+names(colorv) = c('ch_snap', 'ch_feature', 'ch_concact', 'ch_muse', 'ch_spice', 'ch_cca', 'ch_mofa')
+# CH
+
+p = ggplot(metrics,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen DB") + scale_fill_manual(values = colorv) + scale_color_manual(values = colorv)
+ggsave("../plots/xton_db.svg", height = 3, width = 5)
+p
+```
+
+```{r}
+metrics = read.csv("../data/Mod_result_xton.csv") # metrics prev calced
+
+colorv = c("#f6511d","#ffb400","#00a6ed","#7fb800","#A149FA","#FB9AD1", "#94FFD8")
+names(colorv) = c('ch_snap', 'ch_feature', 'ch_concact', 'ch_muse', 'ch_spice', 'ch_cca', 'ch_mofa')
+# CH
+
+p = ggplot(metrics,aes(x=res, y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen Mod") + scale_fill_manual(values = colorv) + scale_color_manual(values = colorv)
+ggsave("../plots/xton_mod.svg", height = 3, width = 5)
+p
+```
+
+####################### UMAP plotting
+
+####################
+
+```{r}
+ssnap = read.csv('../data/Xton_double_snap_combo_stable.csv')
+ssnap$X = NULL # first row is rnum
+colnames(ssnap) = paste0('PC_', rep(1:ncol(ssnap)))
+rownames(ssnap) = paste0('cell_', rep(1:nrow(ssnap)))
+
+library(Seurat)
+snp <- CreateSeuratObject(counts = t(ssnap), assay = "cnp")
+SetAssayData(object = snp, slot = "data", new.data =t(ssnap), assay="cnp")
+snp <- ScaleData(snp) 
+snp<- RunPCA(snp, features = rownames(snp))
+snp <-  FindNeighbors(snp, dims = 1:30)
+
+# umap plotting
+snp <- RunUMAP(snp, dims = 1:30)
+#p1 <- DimPlot(snp, label = TRUE, repel = TRUE, label.size = 2.5) #+ NoLegend()
+#p1
+```
+
+```{r}
+df_meta = read.csv('../data/Xton_sub_meta_snap_feat_clusters.csv')
+snp@meta.data$snap_label = df_meta$snapres1_ann
+p1 <- DimPlot(snp, label = TRUE, repel = TRUE, label.size = 5,
+              group.by = 'snap_label', raster = FALSE) + NoLegend()
+p1
+```
+
+```{r}
+library(Polychrome)
+set.seed(42)
+P20 = createPalette(20,  c("#010101", "#ff0000"), M=1000)
+P20_re = P20[sample(length(P20), length(P20))]
+swatch(P20_re)
+```
+
+
+### save out
+
+```{r}
+#df_meta = read.csv('../data/save_spleen_ann_dec27.csv')
+embd = data.frame(umap1 = snp@reductions$umap@cell.embeddings[,1],
+                  umap2 = snp@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta$snapres1))
+
+#bkc = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#e3d3d3', '#000000')
+#names(bkc) = c('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
+#               '12', '13', '14', '15', '16', '17', '18', '19', '20', '21')
+names(P20_re) = c('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
+                '12', '13', '14', '15', '16', '17', '18', '19')
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.5) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = P20_re)
+ggsave("../plots/umap_xton_snap.png",p1,height = 6, width = 7.8)
+p1
+```
+
+
+
+########## looks good, work on the feature only version
+
+```{r}
+feat = read.csv('../data/Xton_sub_pc.csv')
+feat = feat[,c(1:30)] # only use first 30 pCs
+#colnames(ssnap) = paste0('PC_', rep(1:ncol(ssnap)))
+rownames(feat) = paste0('cell_', rep(1:nrow(feat)))
+
+library(Seurat)
+featt <- CreateSeuratObject(counts = t(feat), assay = "cnp")
+SetAssayData(object = featt, slot = "data", new.data =t(feat), assay="cnp")
+featt@reductions$pca = CreateDimReducObject(embedding = as.matrix(feat),assay = DefaultAssay(featt),key = "PC_")
+# input is already pca so skip these steps
+#featt <- ScaleData(featt) 
+#featt<- RunPCA(featt, features = rownames(featt))
+featt <-  FindNeighbors(featt, dims = 1:30)
+
+# umap plotting
+featt <- RunUMAP(featt, dims = 1:30)
+#p1 <- DimPlot(snp, label = TRUE, repel = TRUE, label.size = 2.5) #+ NoLegend()
+#p1
+```
+
+
+```{r}
+#df_meta = read.csv('../data/save_tonsil_ann_dec28.csv')
+featt@meta.data$feat_label = df_meta$featres1_ann
+p1 <- DimPlot(featt, label = TRUE, repel = TRUE, label.size = 5,
+              group.by = 'feat_label', raster = FALSE) + NoLegend()
+p1
+```
+
+
+```{r}
+#df_meta = read.csv('../data/save_spleen_ann_dec27.csv')
+embd = data.frame(umap1 = featt@reductions$umap@cell.embeddings[,1],
+                  umap2 = featt@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta$featres1))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.5) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = P20_re)
+ggsave("../plots/umap_xton_feat.png",p1,height = 6, width = 7.8)
+p1
+```
+
+
+
+########## do heatmap seurat style
+
+```{r}
+df_norm = read.csv('../data/Xton_sub_norm.csv')
+gene_names = read.csv('../data/gene_names.csv')
+colnames(df_norm) = gene_names$X0
+rownames(df_norm) = paste0('cell_', rep(1:nrow(df_norm)))
+test <- CreateSeuratObject(counts = t(df_norm), assay = "cnp")
+SetAssayData(object = test, slot = "data", new.data =t(df_norm), assay="cnp")
+test <- ScaleData(test)
+test@meta.data$snap = df_meta$snapres1
+test@meta.data$feat = df_meta$featres1
+```
+
+
+```{r}
+## test snap diff
+Idents(test) = factor(test@meta.data$feat, levels = c(0,1,2,3,4,5,6,7,8,9,10,
+                                                      11,12))
+deg.feat <- FindAllMarkers(test, only.pos = FALSE)
+
+deg.feat %>%
+    group_by(cluster) %>%
+    slice_head(n = 10) %>%
+    ungroup() -> top10
+
+maxcells  <- 5 * min(table(Idents(test)))
+subbb = subset(test, downsample = maxcells)
+pp = DoHeatmap(subbb, features = top10$gene)
+#ggsave('../plots/xton_feat.pdf', height = 13, width = 5)
+ggsave('../plots/xton_feat.png', height = 14, width = 6)
+```
+
+
+```{r}
+## test snap diff
+Idents(test) = factor(test@meta.data$snap, levels = c(0,1,2,3,4,5,6,7,8,9,10,
+                                                      11,12,13,14,15,16,17,18,19))
+deg.feat <- FindAllMarkers(test, only.pos = FALSE)
+deg.feat %>%
+    group_by(cluster) %>%
+    slice_head(n = 10) %>%
+    ungroup() -> top10
+
+maxcells  <- 5 * min(table(Idents(test)))
+subbb = subset(test, downsample = maxcells)
+pp = DoHeatmap(subbb, features = top10$gene)
+#ggsave('../plots/xton_feat.pdf', height = 13, width = 5)
+ggsave('../plots/xton_snap.png', height = 14, width = 6)
+```
+
+
+
+
+############ only look at b cells
+
+
+```{r}
+df_meta$snap_ann_b = as.character(df_meta$snapres1_ann)
+df_meta$snap_ann_b[df_meta$snapres1 %in% c(1,2,8,9,16,19)] = 'B'
+df_meta$snap_ann_b[df_meta$snapres1 %in% c(7,13)] = 'GC B'
+df_meta$snap_ann_b[df_meta$snapres1 %in% c(15)] = 'replicating non-GC B'
+
+###
+ssnapb = subset(ssnap, df_meta$snap_ann_b %in% c('B', 'GC B','replicating non-GC B'))
+df_metab = subset(df_meta, df_meta$snap_ann_b %in% c('B', 'GC B','replicating non-GC B'))
+
+library(Seurat)
+snpb <- CreateSeuratObject(counts = t(ssnapb), assay = "cnp")
+SetAssayData(object = snpb, slot = "data", new.data =t(ssnapb), assay="cnp")
+snpb <- ScaleData(snpb) 
+snpb<- RunPCA(snpb, features = rownames(snpb))
+snpb <-  FindNeighbors(snpb, dims = 1:30)
+# umap plotting
+snpb <- RunUMAP(snpb, dims = 1:30)
+```
+
+### save out
+
+```{r}
+embdb = data.frame(umap1 = snpb@reductions$umap@cell.embeddings[,1],
+                  umap2 = snpb@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_metab$snap_ann_b))
+
+library(ggplot2)
+p1 = ggplot(embdb)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.6) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = c("B" = "#A8E890",
+                                "GC B" = "#BFACE2",
+                                "replicating non-GC B" = "#FC2947")) 
+ggsave("../plots/umap_xton_snap_bsub.png",p1,height = 6, width = 6.5)
+p1
+```
+
+```{r}
+### 
+embdb = data.frame(umap1 = snpb@reductions$umap@cell.embeddings[,1],
+                  umap2 = snpb@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_metab$snapres1))
+
+library(ggplot2)
+p1 = ggplot(embdb)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.6) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = P20_re) 
+ggsave("../plots/umap_xton_snap_bsub_clust.png",p1,height = 6, width = 6.5)
+p1
+```
+
+
+
+```{r}
+###
+featb = subset(feat, df_meta$snap_ann_b %in% c('B', 'GC B','replicating non-GC B'))
+#df_metab = subset(df_meta, df_meta$snap_label_res1_ann %in% c('B', 'gcB', 'non-gc replicating cell'))
+
+library(Seurat)
+feattb <- CreateSeuratObject(counts = t(featb), assay = "cnp")
+SetAssayData(object = feattb, slot = "data", new.data =t(featb), assay="cnp")
+feattb <- ScaleData(feattb) 
+feattb<- RunPCA(feattb, features = rownames(feattb))
+feattb <-  FindNeighbors(feattb, dims = 1:25)
+# umap plotting
+feattb <- RunUMAP(feattb, dims = 1:25)
+```
+
+### save out
+
+```{r}
+embdb = data.frame(umap1 = feattb@reductions$umap@cell.embeddings[,1],
+                  umap2 = feattb@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_metab$snap_ann_b),
+                  add = df_metab$featres1)
+embdb = subset(embdb, embdb$add %in% c(0,3,6,12))
+
+library(ggplot2)
+p1 = ggplot(embdb)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.6) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = c("B" = "#A8E890",
+                                "GC B" = "#BFACE2",
+                                "replicating non-GC B" = "#FC2947")) 
+ggsave("../plots/umap_xton_feat_bsub.png",p1,height = 6, width = 6.5)
+p1
+```
+
+```{r}
+### 
+embdb = data.frame(umap1 = feattb@reductions$umap@cell.embeddings[,1],
+                  umap2 = feattb@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_metab$featres1),
+                  add = df_metab$featres1)
+embdb = subset(embdb, embdb$add %in% c(0,3,6,12))
+
+library(ggplot2)
+p1 = ggplot(embdb)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.6) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = P20_re) 
+ggsave("../plots/umap_xton_feat_bsub_clust.png",p1,height = 6, width = 6.5)
+p1
+```
+
+
+
+
+
+
+
+
+######### plot b cell location plots
+
+```{r}
+plot = df_meta
+plot$label = 'Other'
+plot$label[plot$featres1 == 3] = 'target'
+
+ggc = c("white", "red")
+names(ggc) = c('Other','target')
+
+plot$alpha = 1
+plot$alpha[plot$label == 'Other'] = 0
+
+p = ggplot(plot, aes(x = x_centroid, y = y_centroid, color = label)) +
+    geom_point(aes(alpha = alpha),stroke = 0.1, size = 0.5) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+      scale_color_manual(values = ggc) + 
+    theme(
+      plot.background = element_rect(fill = "white")
+      )
+ggsave("../plots/feat3.png",p ,height = 5, width = 5.5)
+p
+
+```
+
+
+```{r}
+plot = df_meta
+plot$label = 'Other'
+plot$label[plot$snapres1 == 7] = 'target'
+
+ggc = c("white", "red")
+names(ggc) = c('Other','target')
+
+plot$alpha = 1
+plot$alpha[plot$label == 'Other'] = 0
+
+p = ggplot(plot, aes(x = x_centroid, y = y_centroid, color = label)) +
+    geom_point(aes(alpha = alpha),stroke = 0.1, size = 0.5) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+      scale_color_manual(values = ggc) + 
+    theme(
+      plot.background = element_rect(fill = "white")
+      )
+ggsave("../plots/snap7.png",p ,height = 5, width = 5.5)
+p
+
+```
+
+
+```{r}
+plot = df_meta
+plot$label = 'Other'
+plot$label[plot$snapres1 == 15] = 'target'
+
+ggc = c("white", "red")
+names(ggc) = c('Other','target')
+
+plot$alpha = 1
+plot$alpha[plot$label == 'Other'] = 0
+
+p = ggplot(plot, aes(x = x_centroid, y = y_centroid, color = label)) +
+    geom_point(aes(alpha = alpha),stroke = 0.1, size = 0.5) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+      scale_color_manual(values = ggc) + 
+    theme(
+      plot.background = element_rect(fill = "white")
+      )
+ggsave("../plots/snap15.png",p ,height = 5, width = 5.5)
+p
+
+```
