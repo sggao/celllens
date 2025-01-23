@@ -10,7 +10,7 @@
 <img src="https://github.com/sggao/CellLENS/blob/main/media/figure1_v4.png">
 
 ## Description
-Official implementation of Cell Spatial And Neighborhood Pattern (CellLENS), a computational method that learns a single-cell representation embedding by integrating cross-domain information from tissue samples.
+Official implementation of Cell Local Environment Neighborhood Scan (CellLENS), a computational method that learns a single-cell representation embedding by integrating cross-domain information from tissue samples.
 Through the analysis of datasets spanning spatial proteomic and spatial transcriptomic modalities, and across different tissue types and disease settings, we demonstrate CellLENS’s capability to elucidate biologically relevant cell populations that were previously elusive due to the relinquished tissue morphological information from images. For more details, see our [preprint](https://www.biorxiv.org/content/10.1101/2024.05.12.593710v1).
 
 
