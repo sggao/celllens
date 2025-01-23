@@ -1,6 +1,6 @@
 This folder contains all the codes that were used in our study.
 
-Note the CellSNAP method we utilized in the scripts was the development version, which has different format and grammar compared to the final package.
+Note the CellLENS method we utilized in the scripts was the development version (also name initially CellSNAP - so slight difference in naming), which has different format and grammar compared to the final package.
 
 The intention of this folder is a record for all the analyses generated in the study and for replication if needed.
 
@@ -9,9 +9,9 @@ File descriptions examples
 .
 ├── CODEX_spleen/code # contains all code used for CODEX mouse spleen analysis
 │   ├── prep_murine.ipynb # preparation of data
-│   ├── cnn_train_murine.py # train SNAP-CNN
-│   ├── cnn_get_murine.ipynb # get SNAP-CNN embedding
-│   ├── gnn_duo_murine.ipynb # train and get SNAP-GNN-duo embedding
+│   ├── cnn_train_murine.py # train LENS-CNN
+│   ├── cnn_get_murine.ipynb # get LENS-CNN embedding
+│   ├── gnn_duo_murine.ipynb # train and get LENS-GNN-duo embedding
 │   ├── cluster_ann_murine.ipynb # cell population annotation of clustering results
 │   ├── muse_murine_format.ipynb # preparation of data for muse
 │   ├── muse_murine_step1.ipynb # muse run step 1
@@ -41,10 +41,10 @@ File descriptions examples
 │   ├── prep_murine_bench.ipynb # data preparation
 |   |
 │   ├── cluster_res # benchmark Leiden clustering resolution used to construct neighborhood composition
-|   |   ├── cnn_train_res0.2.py # SNAP-CNN train, at res = 0.2
+|   |   ├── cnn_train_res0.2.py # LENS-CNN train, at res = 0.2
 |   |   ├── ... # other resolutions
-|   |   ├── get_cnn_res_related.ipynb # SNAP-CNN get embedding
-|   |   ├── get_dbGNN_embed_res.ipynb # SNAP-GNN-duo train and get embedding
+|   |   ├── get_cnn_res_related.ipynb # LENS-CNN get embedding
+|   |   ├── get_dbGNN_embed_res.ipynb # LENS-GNN-duo train and get embedding
 |   |   ├── benchmark_CH_nbres.ipynb # get metrics
 |   |   └── ... # other metrics
 |   |
@@ -62,7 +62,7 @@ File descriptions examples
 |   |
 │   └── plot_bench.Rmd # plotting code
 |   
-├── spatial-clust-scripts-main # contains CellSNAP functions (and helper functions) used in the study (dev version)
+├── spatial-clust-scripts-main # contains CellLENS functions (and helper functions) used in the study (dev version)
 |   
 └── Benchmark_duo/code # contains all code used for model structure benchmarking on the CODEX spleen dataset
 
