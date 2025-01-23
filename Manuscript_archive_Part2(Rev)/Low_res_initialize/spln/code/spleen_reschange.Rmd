@@ -1,0 +1,322 @@
+
+########### below is line plot
+
+
+```{r}
+library(ggplot2)
+library(paletteer)
+
+metrics = read.csv("../../../local_bench/data/spleen/CH_result_spleen_0327.csv")
+metrics2 = read.csv('../../../local_bench/data/spleen/CH_result_spleen_revloc.csv')
+metrics3 = read.csv('../data/CH_result_spleen_res020304.csv')
+metricsall = rbind(metrics, metrics2, metrics3)
+
+## base line
+averages <- metricsall %>%
+  filter(!variable %in% c("ch_res02", "ch_res03", "ch_res04", 'ch_snap')) %>%  
+  group_by(X,k) %>% 
+  summarise(value = mean(value, na.rm = TRUE))
+averages$variable = 'ch_all_avg'
+## self
+metricslen = subset(metricsall, metricsall$variable %in%
+                      c('ch_res02', 'ch_res03', 'ch_res04', 'ch_snap'))
+## combine
+plotdf = rbind(metricslen, averages)
+
+colors <- c("grey", "#3CB44B", "#FFE119", "#4363D8", "#F58231")
+
+p = ggplot(plotdf,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen CH") + scale_color_manual(values = 
+colors) + scale_fill_manual(values = colors)
+ggsave("../plots/ch_spleen_res020304.svg", height = 3, width = 5)
+p
+```
+
+
+```{r}
+library(ggplot2)
+library(paletteer)
+
+metrics = read.csv("../../../local_bench/data/spleen/SS_result_spleen_0327.csv")
+metrics2 = read.csv('../../../local_bench/data/spleen/SS_result_spleen_revloc.csv')
+metrics3 = read.csv('../data/SS_result_spleen_res020304.csv')
+metricsall = rbind(metrics, metrics2, metrics3)
+
+## base line
+averages <- metricsall %>%
+  filter(!variable %in% c("ch_res02", "ch_res03", "ch_res04", 'ch_snap')) %>%  
+  group_by(X,k) %>% 
+  summarise(value = mean(value, na.rm = TRUE))
+averages$variable = 'ch_all_avg'
+## self
+metricslen = subset(metricsall, metricsall$variable %in%
+                      c('ch_res02', 'ch_res03', 'ch_res04', 'ch_snap'))
+## combine
+plotdf = rbind(metricslen, averages)
+
+colors <- c("grey", "#3CB44B", "#FFE119", "#4363D8", "#F58231")
+
+p = ggplot(plotdf,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen CH") + scale_color_manual(values = 
+colors) + scale_fill_manual(values = colors)
+ggsave("../plots/ss_spleen_res020304.svg", height = 3, width = 5)
+p
+```
+
+
+```{r}
+library(ggplot2)
+library(paletteer)
+
+metrics = read.csv("../../../local_bench/data/spleen/DB_result_spleen_0327.csv")
+metrics2 = read.csv('../../../local_bench/data/spleen/DB_result_spleen_revloc.csv')
+metrics3 = read.csv('../data/DB_result_spleen_res020304.csv')
+metricsall = rbind(metrics, metrics2, metrics3)
+
+## base line
+averages <- metricsall %>%
+  filter(!variable %in% c("ch_res02", "ch_res03", "ch_res04", 'ch_snap')) %>%  
+  group_by(X,k) %>% 
+  summarise(value = mean(value, na.rm = TRUE))
+averages$variable = 'ch_all_avg'
+## self
+metricslen = subset(metricsall, metricsall$variable %in%
+                      c('ch_res02', 'ch_res03', 'ch_res04', 'ch_snap'))
+## combine
+plotdf = rbind(metricslen, averages)
+
+colors <- c("grey", "#3CB44B", "#FFE119", "#4363D8", "#F58231")
+
+p = ggplot(plotdf,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen CH") + scale_color_manual(values = 
+colors) + scale_fill_manual(values = colors)
+ggsave("../plots/db_spleen_res020304.svg", height = 3, width = 5)
+p
+```
+
+
+```{r}
+library(ggplot2)
+library(paletteer)
+
+metrics = read.csv("../../../local_bench/data/spleen/Mod_result_spleen_0327.csv")
+metrics2 = read.csv('../../../local_bench/data/spleen/Mod_result_spleen_revloc.csv')
+metrics3 = read.csv('../data/Mod_result_spleen_res020304.csv')
+metricsall = rbind(metrics, metrics2, metrics3)
+
+## base line
+averages <- metricsall %>%
+  filter(!variable %in% c("ch_res02", "ch_res03", "ch_res04", 'ch_snap')) %>%  
+  group_by(X,res) %>% 
+  summarise(value = mean(value, na.rm = TRUE))
+averages$variable = 'ch_all_avg'
+## self
+metricslen = subset(metricsall, metricsall$variable %in%
+                      c('ch_res02', 'ch_res03', 'ch_res04', 'ch_snap'))
+## combine
+plotdf = rbind(metricslen, averages)
+
+colors <- c("grey", "#3CB44B", "#FFE119", "#4363D8", "#F58231")
+
+p = ggplot(plotdf,aes(x=res,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen Mod") + scale_color_manual(values = 
+colors) + scale_fill_manual(values = colors)
+ggsave("../plots/mod_spleen_res020304.svg", height = 3, width = 5)
+p
+```
+
+#### ok now I load stuff and draw b cells
+
+
+```{r}
+plotdf = read.csv('../data/save_spleen_ann_1111_res04ver.csv')
+
+group.colors <- c( "clust" = "#FF1E00", "None" = "#FFFFFF00")
+snap_b = c(1,4,6,8,9,12,15,16,19)
+i = 0
+for(clust in snap_b){ # do this by cluster number
+  i = i + 1
+  print(clust)
+  temp = plotdf
+  temp$plot = "None"
+  temp$plot[temp$snapres1f04 == clust] = "clust"
+  
+  p = ggplot(temp, aes(x = centroid_x, y = centroid_y, color = plot)) +
+    geom_point(size = 0.2, stroke = 0.2) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+    scale_color_manual(values=group.colors)
+  
+  assign(paste0("p", i), p)
+}
+
+library(patchwork)
+pp = wrap_plots(p1,p2,p3,p4,p5,p6,p7,p8,p9, ncol = 9)
+pp
+ggsave("../plots/res04_b.png", height = 3, width = 27)
+```
+
+
+```{r}
+plotdf = read.csv('../data/save_spleen_ann_1111_res03ver.csv')
+
+group.colors <- c( "clust" = "#FF1E00", "None" = "#FFFFFF00")
+snap_b = c(0,3,4,7,8,9,19,21,22)
+i = 0
+for(clust in snap_b){ # do this by cluster number
+  i = i + 1
+  print(clust)
+  temp = plotdf
+  temp$plot = "None"
+  temp$plot[temp$snapres1f03 == clust] = "clust"
+  
+  p = ggplot(temp, aes(x = centroid_x, y = centroid_y, color = plot)) +
+    geom_point(size = 0.2, stroke = 0.2) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+    scale_color_manual(values=group.colors)
+  
+  assign(paste0("p", i), p)
+}
+
+library(patchwork)
+pp = wrap_plots(p1,p2,p3,p4,p5,p6,p7,p8,p9, ncol = 9)
+pp
+ggsave("../plots/res03_b.png", height = 3, width = 27)
+```
+
+
+```{r}
+plotdf = read.csv('../data/save_spleen_ann_1111_res02ver.csv')
+
+group.colors <- c( "clust" = "#FF1E00", "None" = "#FFFFFF00")
+snap_b = c(0,3,5,8,10,11,12,19,20)
+i = 0
+for(clust in snap_b){ # do this by cluster number
+  i = i + 1
+  print(clust)
+  temp = plotdf
+  temp$plot = "None"
+  temp$plot[temp$snapres1f02 == clust] = "clust"
+  
+  p = ggplot(temp, aes(x = centroid_x, y = centroid_y, color = plot)) +
+    geom_point(size = 0.2, stroke = 0.2) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+    scale_color_manual(values=group.colors)
+  
+  assign(paste0("p", i), p)
+}
+
+library(patchwork)
+pp = wrap_plots(p1,p2,p3,p4,p5,p6,p7,p8,p9, ncol = 9)
+pp
+ggsave("../plots/res02_b.png", height = 3, width = 27)
+```
+
+
+######## ok below is for ground truth calculation
+
+```{r}
+## load groundtruth
+gds = read.csv('../../../gd_spleen/data/spleen_gd_500form_updatedV3.csv')
+gds <- gds %>%
+  filter(if_all(everything(), ~ . != ""))
+## test
+res02 = read.csv('../data/save_spleen_ann_1111_res02ver.csv')
+res02$snapres1f02_ann[res02$snapres1f02_ann == 'Fibro/stromal'] = 'Fibro/Epi'
+
+res03 = read.csv('../data/save_spleen_ann_1111_res03ver.csv')
+res03$snapres1f03_ann[res03$snapres1f03_ann == 'Fibro/stromal'] = 'Fibro/Epi'
+
+res04 = read.csv('../data/save_spleen_ann_1111_res04ver.csv')
+res04$snapres1f04_ann[res04$snapres1f04_ann == 'Fibro/stromal'] = 'Fibro/Epi'
+
+res05 = read.csv('../../../gd_spleen/data/save_spleen_ann_0328.csv')
+```
+
+```{r}
+## set gd compare
+gdc_res02 = res02[gds$X+1,]
+gdc_res03 = res03[gds$X+1,]
+gdc_res04 = res04[gds$X+1,]
+gdc_res05 = res05[gds$X+1,]
+gdc_res02$gdc = gdc_res02$snapres1f02_ann
+gdc_res03$gdc = gdc_res03$snapres1f03_ann
+gdc_res04$gdc = gdc_res04$snapres1f04_ann
+gdc_res05$gdc = gdc_res05$snapres1_ann
+#gds$GD[gds$GD == 'gcrB'] = 'B'
+
+## clean gcrB
+gdc_res02$gdc[gdc_res02$snapres1f02 %in% c(3,5,8,10,11)] = 'gcrB'
+gdc_res03$gdc[gdc_res03$snapres1f03 %in% c(0,3,8,9,19)] = 'gcrB'
+gdc_res04$gdc[gdc_res04$snapres1f04 %in% c(4,6,8,9,16)] = 'gcrB'
+gdc_res05$gdc[gdc_res05$snapres1 %in% c(2,6,7,10,12)] = 'gcrB'
+
+## need to remove cells that does not have ground truth
+`%notin%` <- Negate(`%in%`)
+indx <- which((gds$GD %notin% c('undef', 'mixture', 'dirt')))
+```
+
+```{r}
+## calculate numbers
+sum(gdc_res02$gdc[indx] == gds$GD[indx]) / length(indx)
+sum(gdc_res03$gdc[indx] == gds$GD[indx]) / length(indx)
+sum(gdc_res04$gdc[indx] == gds$GD[indx]) / length(indx)
+sum(gdc_res05$gdc[indx] == gds$GD[indx]) / length(indx)
+```
+
+```{r}
+dd = data.frame(c02 = gdc_res02$snapres1f02, a02 = gdc_res02$gdc,
+                c03 = gdc_res03$snapres1f03, a03 = gdc_res03$gdc,
+                c04 = gdc_res04$snapres1f04, a04 = gdc_res04$gdc,
+                gd = gds$GD, X = gds$X,
+                c05 = gds$snapres1, a05 = gdc_res05$gdc, af = gds$featres1_ann
+                )
+View(dd)
+write.csv(dd, '../data/')
+```
+
+
+

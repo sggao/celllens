@@ -1,0 +1,71 @@
+---
+title: "Seurat_trans"
+output: html_document
+---
+
+```{r}
+## read in ref data
+seq = read.csv('../data/tonsil_80k_5khvg_normed.csv') # ref data needs to be raw coutns
+meta_seq = read.csv('../data/tonsil_80k_meta.csv')
+vargene_name = read.csv('../data/5k_vg_names.csv')
+rownames(seq) = vargene_name$genes
+
+## read in annotate data
+xton = read.csv('../../gd_xton/data/Xton_sub_norm.csv')
+meta_xton = read.csv('../../gd_xton/data/Xton_sub_meta_snap_feat_clusters.csv')
+gene_name = read.csv('../../gd_xton/data/gene_names.csv')
+colnames(xton) = gene_name$X0
+```
+
+
+```{r}
+expression_matrix <- t(as.matrix(xton) ) # Gene x Cell
+cell_metadata <- as.data.frame(meta_xton)  # Cell x Metadata
+colnames(expression_matrix) = paste0('cell_', c(1: ncol(expression_matrix)))
+
+library(Seurat)
+spatial <- CreateSeuratObject(counts = expression_matrix)
+spatial@assays$RNA@data <- expression_matrix
+spatial <- ScaleData(spatial)
+spatial <- RunPCA(spatial, features = rownames(expression_matrix))
+```
+
+
+```{r}
+expression_matrix <- (as.matrix(seq) ) # Gene x Cell
+cell_metadata <- as.data.frame(meta_seq)  # Cell x Metadata
+colnames(expression_matrix) = paste0('cell_', c(1: ncol(expression_matrix)))
+
+reference <- CreateSeuratObject(counts = expression_matrix)
+reference@assays$RNA@data <- expression_matrix
+reference <- ScaleData(reference)
+reference <- RunPCA(reference, features = rownames(expression_matrix))
+reference$cell_type <-  meta_seq$annotation_level_1
+```
+
+
+```{r}
+anchors <- FindTransferAnchors(
+    reference = reference,
+    query = spatial,
+    dims = 1:30,  # Use the first 30 principal components
+    feature = intersect(rownames(reference), rownames(spatial))
+)
+
+```
+
+```{r}
+predictions <- TransferData(
+    anchorset = anchors,
+    refdata = reference$cell_type,  # Use the reference cell types
+    dims = 1:30
+)
+
+```
+
+
+```{r}
+meta_xton$seurat_label = predictions$predicted.id
+write.csv(meta_xton, '../data/Xton_sub_meta_seurat_pred.csv')
+```
+

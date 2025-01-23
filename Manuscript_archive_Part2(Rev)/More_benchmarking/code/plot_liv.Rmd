@@ -1,0 +1,424 @@
+
+########## now do ranking
+
+```{r}
+metrics = read.csv("../data/liv/CH_result_liv_0325.csv") # metrics prev calced
+metrics2 = read.csv('../data/liv/CH_result_liver_rev.csv')
+metrics3 = read.csv('../data/liv/CH_result_liver_ccamofa.csv')
+metricsall = do.call(rbind, list(metrics, metrics2, metrics3))
+
+# Calculate average performance for each variable across each k
+library(dplyr)
+ranked_results <- metricsall %>%
+  group_by(k, variable) %>%
+  summarize(avg_value = mean(value), .groups = "drop") %>%       # Average the 5 replicates for each method at each k
+  group_by(k) %>%
+  mutate(rank_within_k = rank(-avg_value, ties.method = "average")) %>%  # Rank each method within each k
+  ungroup() %>%
+  group_by(variable) %>%
+  summarize(average_rank = mean(rank_within_k)) %>%              # Calculate the average rank across all k-values
+  arrange(average_rank)
+ranked_results_ch = ranked_results
+ranked_results_ch$type = 'CH'
+
+############## then SS
+
+metrics = read.csv("../data/liv/SS_result_liv_0325.csv") # metrics prev calced
+metrics2 = read.csv('../data/liv/SS_result_liver_rev.csv')
+metrics3 = read.csv('../data/liv/SS_result_liver_ccamofa.csv')
+metricsall = do.call(rbind, list(metrics, metrics2, metrics3))
+
+# Calculate average performance for each variable across each k
+library(dplyr)
+ranked_results <- metricsall %>%
+  group_by(k, variable) %>%
+  summarize(avg_value = mean(value), .groups = "drop") %>%       # Average the 5 replicates for each method at each k
+  group_by(k) %>%
+  mutate(rank_within_k = rank(-avg_value, ties.method = "average")) %>%  # Rank each method within each k
+  ungroup() %>%
+  group_by(variable) %>%
+  summarize(average_rank = mean(rank_within_k)) %>%              # Calculate the average rank across all k-values
+  arrange(average_rank)
+ranked_results_ss = ranked_results
+ranked_results_ss$type = 'SS'
+
+
+############## then Mod
+
+metrics = read.csv("../data/liv/Mod_result_liv_0325.csv") # metrics prev calced
+metrics2 = read.csv('../data/liv/Mod_result_liver_rev.csv')
+metrics3 = read.csv('../data/liv/Mod_result_liver_ccamofa.csv')
+metricsall = do.call(rbind, list(metrics, metrics2, metrics3))
+
+# Calculate average performance for each variable across each k
+library(dplyr)
+ranked_results <- metricsall %>%
+  group_by(res, variable) %>%
+  summarize(avg_value = mean(value), .groups = "drop") %>%       # Average the 5 replicates for each method at each k
+  group_by(res) %>%
+  mutate(rank_within_k = rank(-avg_value, ties.method = "average")) %>%  # Rank each method within each k
+  ungroup() %>%
+  group_by(variable) %>%
+  summarize(average_rank = mean(rank_within_k)) %>%              # Calculate the average rank across all k-values
+  arrange(average_rank)
+ranked_results_mod = ranked_results
+ranked_results_mod$type = 'Mod'
+
+
+############## then DB
+
+metrics = read.csv("../data/liv/DB_result_liv_0325.csv") # metrics prev calced
+metrics2 = read.csv('../data/liv/DB_result_liver_rev.csv')
+metrics3 = read.csv('../data/liv/DB_result_liver_ccamofa.csv')
+metricsall = do.call(rbind, list(metrics, metrics2, metrics3))
+
+# Calculate average performance for each variable across each k
+library(dplyr)
+ranked_results <- metricsall %>%
+  group_by(k, variable) %>%
+  summarize(avg_value = mean(value), .groups = "drop") %>%       # Average the 5 replicates for each method at each k
+  group_by(k) %>%
+  mutate(rank_within_k = rank(avg_value, ties.method = "average")) %>%  # Rank each method within each k
+  ungroup() %>%
+  group_by(variable) %>%
+  summarize(average_rank = mean(rank_within_k)) %>%              # Calculate the average rank across all k-values
+  arrange(average_rank)
+ranked_results_db = ranked_results
+ranked_results_db$type = 'DB'
+
+resdf = do.call(rbind, list(ranked_results_ch, ranked_results_ss,
+                            ranked_results_db,ranked_results_mod))
+write.csv(resdf, '../data/liv_metric_rank.csv')
+
+ranked_data <- resdf %>%
+  mutate(variable = recode(variable, "ch_spagcn" = "SpaGCN", "ch_sedr" = "SEDR",
+                          "ch_snap" = "CellLENS", "ch_mofa" = "MOFA+", "ch_cca" = "CCA",
+                          "ch_spice" = "SpiceMix", "ch_banksy" = "BANKSY",
+                          "ch_feature" = "Feature", "ch_stlearn" = "stLearn",
+                          "ch_concact" = "Concact", "ch_cellc" = "CellCharter",
+                          "ch_muse" = "MUSE")) %>%
+  mutate(type = factor(type, levels = c("Mod", "SS", "CH", "DB"))) %>% 
+  group_by(variable) %>%
+  mutate(average_rank_within_type = mean(average_rank)) %>% 
+  ungroup()
+
+# Step 2: Plot with reordered variable within each type
+p = ggplot(ranked_data, aes(x = reorder(variable, average_rank_within_type), y = average_rank, fill = type)) +
+  geom_bar(stat = "identity", color = "black", position = position_dodge(width = 0.8)) +
+  geom_text(aes(label = round(average_rank, 2)), vjust = -0.5, size = 3.5, position = position_dodge(width = 0.8)) +
+  labs(title = "Average Rank of Methods by Type", x = "Method", y = "Average Rank (Lower is Better)") +
+  facet_wrap(~ type, scales = "free_x") +  # Creates separate panels for each 'type'
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set3")  # Color palette for distinct groups
+#ggsave('../plots/rank_liver.svg',p, height = 6, width = 12)
+p
+```
+
+
+########### below is line plot version
+
+
+
+```{r}
+library(ggplot2)
+library(paletteer)
+
+metrics = read.csv("../data/liv/CH_result_liv_0325.csv") # metrics prev calced
+metrics2 = read.csv('../data/liv/CH_result_liver_rev.csv')
+metricsall = rbind(metrics, metrics2)
+
+#colorv = c("#f6511d","#ffb400","#00a6ed","#7fb800","#A149FA")
+#names(colorv) = c('ch_snap', 'ch_feature', 'ch_concact', 'ch_muse', 'ch_spice')
+# CH
+
+p = ggplot(metricsall,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("liver CH") + scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps")) + scale_fill_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+
+#+ scale_fill_manual(values = colorv) + scale_color_manual(values = colorv)
+#ggsave("../plots/spleen_ch_0327.svg", height = 3, width = 5)
+p
+```
+
+
+```{r}
+library(ggplot2)
+
+metrics = read.csv("../data/liv/SS_result_liv_0325.csv") # metrics prev calced
+metrics2 = read.csv('../data/liv/SS_result_liver_rev.csv')
+metricsall = rbind(metrics, metrics2)
+
+#colorv = c("#f6511d","#ffb400","#00a6ed","#7fb800","#A149FA")
+#names(colorv) = c('ch_snap', 'ch_feature', 'ch_concact', 'ch_muse', 'ch_spice')
+# CH
+
+p = ggplot(metricsall,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("liver SS") + scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps")) + scale_fill_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+
+#ggsave("../plots/spleen_ch_0327.svg", height = 3, width = 5)
+p
+```
+
+
+
+```{r}
+library(ggplot2)
+
+metrics = read.csv("../data/liv/DB_result_liv_0325.csv") # metrics prev calced
+metrics2 = read.csv('../data/liv/DB_result_liver_rev.csv')
+metricsall = rbind(metrics, metrics2)
+metricsall = subset(metricsall, metricsall$variable != 'ch_sedr')
+metricsall = subset(metricsall, metricsall$variable != 'ch_stlearn')
+#colorv = c("#f6511d","#ffb400","#00a6ed","#7fb800","#A149FA")
+#names(colorv) = c('ch_snap', 'ch_feature', 'ch_concact', 'ch_muse', 'ch_spice')
+# CH
+
+p = ggplot(metricsall,aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("liver DB") + scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps")) + scale_fill_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+
+#ggsave("../plots/spleen_ch_0327.svg", height = 3, width = 5)
+p
+```
+
+
+```{r}
+library(ggplot2)
+
+metrics = read.csv("../data/liv/Mod_result_liv_0325.csv") # metrics prev calced
+metrics2 = read.csv('../data/liv/Mod_result_liver_rev.csv')
+metricsall = rbind(metrics, metrics2)
+
+#colorv = c("#f6511d","#ffb400","#00a6ed","#7fb800","#A149FA")
+#names(colorv) = c('ch_snap', 'ch_feature', 'ch_concact', 'ch_muse', 'ch_spice')
+# CH
+
+p = ggplot(metricsall,aes(x=res,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("liver Mod") + scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps")) + scale_fill_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+
+#ggsave("../plots/spleen_ch_0327.svg", height = 3, width = 5)
+p
+```
+
+
+###################### umap quick check
+
+```{r}
+library(Seurat)
+
+ssnap = read.csv('../data/liv/double_snap_combo_stable_0327.csv')
+
+set.seed(123)
+rid = sample(1:nrow(ssnap), 10000, replace = FALSE)
+
+ssnap$X = NULL # first row is rnum
+colnames(ssnap) = paste0('PC_', rep(1:ncol(ssnap)))
+rownames(ssnap) = paste0('cell_', rep(1:nrow(ssnap)))
+
+library(Seurat)
+snp <- CreateSeuratObject(counts = t(ssnap[rid,]), assay = "cnp")
+SetAssayData(object = snp, slot = "data", new.data =t(ssnap[rid,]), assay="cnp")
+snp <- ScaleData(snp) 
+snp<- RunPCA(snp, features = rownames(snp))
+snp <-  FindNeighbors(snp, dims = 1:30)
+
+# umap plotting
+snp <- RunUMAP(snp, dims = 1:30)
+
+##
+df_meta = read.csv('../data/liv/livcan_meta_y4_x69_withClusters_0327.csv')
+df_meta = df_meta[rid,]
+embd = data.frame(umap1 = snp@reductions$umap@cell.embeddings[,1],
+                  umap2 = snp@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta$cellType))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 3,stroke = 0), cex = 1) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") #+
+  #scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+ggsave("../plots/snap_sub_umap_liv.png",p1,height = 6, width = 7.8)
+p1
+```
+
+
+```{r}
+library(Seurat)
+
+ssnap = read.csv('../data/liv/conv_output_epoch_200.csv')
+ssnap$X = NULL
+
+set.seed(123)
+rid = sample(1:nrow(ssnap), 10000, replace = FALSE)
+
+colnames(ssnap) = paste0('PC_', rep(1:ncol(ssnap)))
+rownames(ssnap) = paste0('cell_', rep(1:nrow(ssnap)))
+
+library(Seurat)
+snp <- CreateSeuratObject(counts = t(ssnap[rid,]), assay = "cnp")
+SetAssayData(object = snp, slot = "data", new.data =t(ssnap[rid,]), assay="cnp")
+snp <- ScaleData(snp) 
+snp<- RunPCA(snp, features = rownames(snp))
+snp <-  FindNeighbors(snp, dims = 1:25)
+
+# umap plotting
+snp <- RunUMAP(snp, dims = 1:25)
+
+##
+df_meta = read.csv('../data/liv/livcan_meta_y4_x69_withClusters_0327.csv')
+df_meta = df_meta[rid,]
+embd = data.frame(umap1 = snp@reductions$umap@cell.embeddings[,1],
+                  umap2 = snp@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta$cellType))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 3,stroke = 0), cex = 1) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") #+
+  #scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+ggsave("../plots/spagcn_sub_umap_liv.png",p1,height = 6, width = 7.8)
+p1
+```
+
+
+
+```{r}
+library(Seurat)
+
+ssnap = read.csv('../data/spleen/spleen_stlearn_pca30v2.csv')
+ssnap$X = NULL
+
+set.seed(123)
+rid = sample(1:nrow(ssnap), 10000, replace = FALSE)
+
+ssnap$X = NULL # first row is rnum
+colnames(ssnap) = paste0('PC_', rep(1:ncol(ssnap)))
+rownames(ssnap) = paste0('cell_', rep(1:nrow(ssnap)))
+
+library(Seurat)
+snp <- CreateSeuratObject(counts = t(ssnap[rid,]), assay = "cnp")
+SetAssayData(object = snp, slot = "data", new.data =t(ssnap[rid,]), assay="cnp")
+snp <- ScaleData(snp) 
+snp<- RunPCA(snp, features = rownames(snp))
+snp <-  FindNeighbors(snp, dims = 1:25)
+
+# umap plotting
+snp <- RunUMAP(snp, dims = 1:25)
+
+##
+df_meta = read.csv('../data/spleen/features_and_metadata.csv')
+df_meta = df_meta[rid,]
+embd = data.frame(umap1 = snp@reductions$umap@cell.embeddings[,1],
+                  umap2 = snp@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta$cluster.termV2))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 3,stroke = 0), cex = 1) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+ggsave("../plots/stlearn_sub_umap.png",p1,height = 6, width = 7.8)
+p1
+```
+
+
+```{r}
+library(Seurat)
+
+ssnap = read.csv('../data/spleen/spleen_sedr_32n.csv')
+ssnap$X = NULL
+
+set.seed(123)
+rid = sample(1:nrow(ssnap), 10000, replace = FALSE)
+
+ssnap$X = NULL # first row is rnum
+colnames(ssnap) = paste0('PC_', rep(1:ncol(ssnap)))
+rownames(ssnap) = paste0('cell_', rep(1:nrow(ssnap)))
+
+library(Seurat)
+snp <- CreateSeuratObject(counts = t(ssnap[rid,]), assay = "cnp")
+SetAssayData(object = snp, slot = "data", new.data =t(ssnap[rid,]), assay="cnp")
+snp <- ScaleData(snp) 
+#snp[["pca"]] <- CreateDimReducObject(embeddings = as.matrix(ssnap[rid,]),
+#                                     key = "PC_", assay = DefaultAssay(snp))
+snp<- RunPCA(snp, features = rownames(snp))
+snp <-  FindNeighbors(snp, dims = 1:30)
+
+# umap plotting
+snp <- RunUMAP(snp, dims = 1:30)
+
+##
+df_meta = read.csv('../data/spleen/features_and_metadata.csv')
+df_meta = df_meta[rid,]
+embd = data.frame(umap1 = snp@reductions$umap@cell.embeddings[,1],
+                  umap2 = snp@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta$cluster.termV2))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 3,stroke = 0), cex = 1) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+ggsave("../plots/sedr_sub_umap.png",p1,height = 6, width = 7.8)
+p1
+```
+
+
+
+```{r}
+library(Seurat)
+
+ssnap = read.csv('../data/spleen/cellsnap_data_spleen_banksy_r1-all.csv')
+ssnap = ssnap[]
+
+set.seed(123)
+rid = sample(1:nrow(ssnap), 10000, replace = FALSE)
+
+ssnap <- ssnap %>% select('PC1':'PC20')
+colnames(ssnap) = paste0('PC_', rep(1:ncol(ssnap)))
+rownames(ssnap) = paste0('cell_', rep(1:nrow(ssnap)))
+
+library(Seurat)
+snp <- CreateSeuratObject(counts = t(ssnap[rid,]), assay = "cnp")
+SetAssayData(object = snp, slot = "data", new.data =t(ssnap[rid,]), assay="cnp")
+snp <- ScaleData(snp) 
+snp<- RunPCA(snp, features = rownames(snp))
+snp <-  FindNeighbors(snp, dims = 1:19)
+
+# umap plotting
+snp <- RunUMAP(snp, dims = 1:19)
+
+##
+df_meta = read.csv('../data/spleen/features_and_metadata.csv')
+df_meta = df_meta[rid,]
+embd = data.frame(umap1 = snp@reductions$umap@cell.embeddings[,1],
+                  umap2 = snp@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta$cluster.termV2))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 3,stroke = 0), cex = 1) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = paletteer_d("colorBlindness::PairedColor12Steps"))
+ggsave("../plots/banksy_sub_umap.png",p1,height = 6, width = 7.8)
+p1
+```
+
+
+
+
+
+
+
+
+
+
+
+

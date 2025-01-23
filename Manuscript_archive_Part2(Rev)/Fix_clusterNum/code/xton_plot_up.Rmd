@@ -1,0 +1,127 @@
+---
+title: "feat_25clusterVer"
+output: html_document
+---
+
+### save out
+
+```{r}
+library(Polychrome)
+set.seed(42)
+P25 = createPalette(20,  c("#010101", "#ff0000"), M=1000)
+P25_re = P25[sample(length(P25), length(P25))]
+#swatch(P25_re)
+```
+
+
+```{r}
+df_meta = read.csv('../data/feat20_clustersV2.csv')
+feat = read.csv('../data/Xton_sub_pc.csv')
+feat = feat[,c(1:30)] # only use first 30 pCs
+rownames(feat) = paste0('cell_', rep(1:nrow(feat)))
+
+library(Seurat)
+featt <- CreateSeuratObject(counts = t(feat), assay = "cnp")
+SetAssayData(object = featt, slot = "data", new.data =t(feat), assay="cnp")
+featt@reductions$pca = CreateDimReducObject(embedding = as.matrix(feat),assay = DefaultAssay(featt),key = "PC_")
+featt <-  FindNeighbors(featt, dims = 1:30)
+# umap plotting
+featt <- RunUMAP(featt, dims = 1:30)
+```
+
+```{r}
+### make feat25 version
+bkc = P25_re
+names(bkc) = c('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
+               '12', '13', '14', '15', '16', '17', '18', '19')
+
+embd = data.frame(umap1 = featt@reductions$umap@cell.embeddings[,1],
+                  umap2 = featt@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta$feat20))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.5) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = bkc)
+ggsave("../plots/umap_xton_feat20_1104.png",p1,height = 6, width = 7.8)
+p1
+```
+
+```{r}
+###
+featb = subset(feat, df_meta$feat20_ann == 'B')
+df_metab = subset(df_meta, df_meta$feat20_ann == 'B')
+
+library(Seurat)
+feattb <- CreateSeuratObject(counts = t(featb), assay = "cnp")
+SetAssayData(object = feattb, slot = "data", new.data =t(featb), assay="cnp")
+feattb <- ScaleData(feattb) 
+feattb<- RunPCA(feattb, features = rownames(feattb))
+feattb <-  FindNeighbors(feattb, dims = 1:25)
+# umap plotting
+feattb <- RunUMAP(feattb, dims = 1:25)
+
+embdb = data.frame(umap1 = feattb@reductions$umap@cell.embeddings[,1],
+                  umap2 = feattb@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_metab$feat20))
+
+library(ggplot2)
+p1 = ggplot(embdb)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.5) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = bkc)
+ggsave("../plots/umap_xton_feat20_bcells_1108.png",p1,height = 6, width = 6.5)
+p1
+```
+
+
+```{r}
+table(df_metab$feat20)
+```
+
+
+```{r}
+plot = df_meta
+plot$label = 'Other'
+plot$label[plot$feat20 == 4] = 'target'
+
+ggc = c("white", "red")
+names(ggc) = c('Other','target')
+
+plot$alpha = 1
+plot$alpha[plot$label == 'Other'] = 0
+
+p = ggplot(plot, aes(x = x_centroid, y = y_centroid, color = label)) +
+    geom_point(aes(alpha = alpha),stroke = 0.1, size = 0.5) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+      scale_color_manual(values = ggc) + 
+    theme(
+      plot.background = element_rect(fill = "white")
+      )
+ggsave("../plots/feat20_4.png",p ,height = 5, width = 5.5)
+p
+
+```
+
+
+
+
+
+
+
+
+
+

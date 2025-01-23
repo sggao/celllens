@@ -1,0 +1,138 @@
+---
+title: "feat_25clusterVer"
+output: html_document
+---
+
+### save out
+
+```{r}
+library(Polychrome)
+set.seed(42)
+P25 = createPalette(22,  c("#010101", "#ff0000"), M=1000)
+P25_re = P25[sample(length(P25), length(P25))]
+#swatch(P25_re)
+```
+
+
+```{r}
+spgcn = read.csv('../data/spagcn_spleen.csv')
+spgcn$X = NULL
+meta = read.csv('../data/save_spleen_ann_spagcn.csv')
+rownames(spgcn) = paste0('cell_', rep(1:nrow(spgcn)))
+
+library(Seurat)
+featt <- CreateSeuratObject(counts = t(spgcn), assay = "cnp")
+SetAssayData(object = featt, slot = "data", new.data =t(spgcn), assay="cnp")
+featt <- ScaleData(featt) 
+featt<- RunPCA(featt, features = rownames(featt))
+featt <-  FindNeighbors(featt, dims = 1:29)
+
+# umap plotting
+featt <- RunUMAP(featt, dims = 1:29)
+```
+
+```{r}
+### make feat25 version
+bkc = P25_re
+names(bkc) = c('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
+               '12', '13', '14', '15', '16', '17', '18', '19', '20', '21')
+
+embd = data.frame(umap1 = featt@reductions$umap@cell.embeddings[,1],
+                  umap2 = featt@reductions$umap@cell.embeddings[,2],
+                  label = as.character(meta$spagcnres1))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 3,stroke = 0), cex = 1) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = bkc)
+ggsave("../plots/umap_spleen_spagcnre1.png",p1,height = 6, width = 7.8)
+p1
+```
+
+```{r}
+###
+featb = subset(spgcn, meta$spagcnres1_ann == 'B')
+df_metab = subset(meta, meta$spagcnres1_ann == 'B')
+
+library(Seurat)
+feattb <- CreateSeuratObject(counts = t(featb), assay = "cnp")
+SetAssayData(object = feattb, slot = "data", new.data =t(featb), assay="cnp")
+feattb <- ScaleData(feattb) 
+feattb<- RunPCA(feattb, features = rownames(feattb))
+feattb <-  FindNeighbors(feattb, dims = 1:29)
+# umap plotting
+feattb <- RunUMAP(feattb, dims = 1:29)
+```
+
+### save out
+
+```{r}
+embdb = data.frame(umap1 = feattb@reductions$umap@cell.embeddings[,1],
+                  umap2 = feattb@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_metab$spagcnres1))
+
+library(ggplot2)
+p1 = ggplot(embdb)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 3,stroke = 0), cex = 1) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = bkc)
+ggsave("../plots/umap_spleen_spagcn_bcells.png",p1,height = 6, width = 6.5)
+p1
+```
+
+
+
+#################### now produce b cell locations
+
+
+Start looking at subset of cells and there spatial locations
+
+```{r}
+df = meta # df with all the meta labels
+
+plotdf = data.frame(f_clust = df$spagcnres1,
+                    f_ann = df$spagcnres1_ann,
+                    x = df$centroid_x,
+                    y = df$centroid_y
+                    )
+```
+
+
+```{r}
+group.colors <- c( "clust" = "#FF1E00", "None" = "#FFFFFF00")
+snap_b = c(0,1,5,8,10,17,19)
+i = 0
+for(clust in snap_b){ # do this by cluster number
+  i = i + 1
+  print(clust)
+  temp = plotdf
+  temp$plot = "None"
+  temp$plot[temp$f_clust == clust] = "clust"
+  
+  p = ggplot(temp, aes(x = x, y = y, color = plot)) +
+    geom_point(size = 0.2, stroke = 0.2) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+    scale_color_manual(values=group.colors)
+  
+  assign(paste0("p", i), p)
+}
+
+library(patchwork)
+pp = wrap_plots(p1,p2,p3,p4,p5,p6,p7, ncol = 7)
+pp
+ggsave("../plots/spagcn_b_1203.png", height = 3, width = 21)
+```
+

@@ -1,0 +1,65 @@
+---
+title: "SingleR"
+output: html_document
+---
+
+```{r}
+## read in ref data
+seq = read.csv('../data/tonsil_80k_5khvg_normed.csv') # ref data needs to be raw coutns
+meta_seq = read.csv('../data/tonsil_80k_meta.csv')
+vargene_name = read.csv('../data/5k_vg_names.csv')
+rownames(seq) = vargene_name$genes
+```
+
+```{r}
+## read in annotate data
+xton = read.csv('../../gd_xton/data/Xton_sub_norm.csv')
+meta_xton = read.csv('../../gd_xton/data/Xton_sub_meta_snap_feat_clusters.csv')
+gene_name = read.csv('../../gd_xton/data/gene_names.csv')
+colnames(xton) = gene_name$X0
+```
+
+```{r}
+library(SingleCellExperiment)
+library(SingleR)
+```
+
+```{r}
+expression_matrix <- t(as.matrix(xton) ) # Gene x Cell
+cell_metadata <- as.data.frame(meta_xton)  # Cell x Metadata
+#gene_metadata <- as.data.frame(gene_metadata_dataframe)  # Gene x Metadata
+
+sce <- SingleCellExperiment(
+    assays = list(counts = expression_matrix, logcounts = expression_matrix),
+    colData = cell_metadata,
+    #rowData = gene_metadata
+)
+```
+
+```{r}
+expression_matrix <- (as.matrix(seq) ) # Gene x Cell
+cell_metadata <- as.data.frame(meta_seq)  # Cell x Metadata
+
+reff <- SingleCellExperiment(
+    assays = list(counts = expression_matrix, logcounts = expression_matrix),
+    colData = cell_metadata,
+    #rowData = gene_metadata
+)
+```
+
+```{r}
+predictions <- SingleR(
+    test = sce,
+    ref = reff,
+    labels = reff$annotation_level_1
+)
+#predictions$labels
+meta_xton$singleR_label = predictions$labels
+
+write.csv(meta_xton, '../data/Xton_sub_meta_singleR_pred.csv')
+```
+
+
+
+
+

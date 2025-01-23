@@ -1,0 +1,221 @@
+
+
+#### this is code for manually labeling GD cells in the Xton dataset
+## first randomly select 300 cells
+
+```{r}
+dfm = read.csv('../data/Xton_sub_meta_snap_feat_clusters.csv')
+
+## sub 300
+set.seed(42)
+rdidx = sample(nrow(dfm), 300)
+dfms = dfm[rdidx,]
+rownames(dfms) = paste0('cell_', as.character(c(1:nrow(dfms))))
+
+## make a cleaner version
+dfmss = data.frame(X = dfms$X, snapa = dfms$snapres1_ann, snapn = dfms$snapres1,
+                   feata = dfms$featres1_ann, featn = dfms$featres1)
+rownames(dfmss) = paste0('cell_', as.character(c(1:nrow(dfmss))))
+#write.csv(dfmss, '../data/Xton_300GD.csv')
+```
+
+
+```{r}
+## next part write the feature ridge and spatial loc
+
+## load counts csv
+dfnm = read.csv('../data/Xton_sub_norm.csv')
+dfg = read.csv('../data/gene_names.csv')
+
+## get sub ver
+dfnms = dfnm[dfmss$X + 1,]
+colnames(dfnms) = dfg$X0
+rownames(dfnms) = paste0('cell_', as.character(c(1:nrow(dfnms))))
+
+library(Seurat)
+seurat_obj <- CreateSeuratObject(counts = t(dfnms))
+seurat_obj@meta.data$fine_ann = dfmss$snapa
+Idents(seurat_obj) <- "fine_ann"
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+
+target = 'cell_287'
+genes_to_plot <- c("CD3E", "CD3D", "IL7R", 'TRAC', 'BANK1', 'MS4A1', 'CD79A', 'CD19',
+                   'FGL2', 'MS4A6A', 'AIF1', 'MKI67', 'EHF', 'TNC', 'LAMP3', 'CD83',
+                   'PTGDS', 'MALL', 'SPIB', 'MPEG1')
+cell_to_highlight <- target
+
+plots <- lapply(genes_to_plot, function(feature_to_plot) {
+  ridge_plot <- RidgePlot(seurat_obj, features = feature_to_plot)
+  ridge_data <- ridge_plot$data
+  ridge_data$cell <- rownames(ridge_data)
+  highlight_data <- ridge_data %>% filter(cell == cell_to_highlight)
+  colnames(highlight_data)[1] <- 'expression'
+  ridge_plot <- ridge_plot + 
+    geom_text(data = highlight_data, 
+              aes(x = expression, y = ident, label = round(expression, 2)),
+              color = "black", size = 3, vjust = -0.5) +
+    ggtitle(paste("Ridge Plot for", feature_to_plot)) +
+  theme(legend.position = "none")
+  return(ridge_plot)
+})
+
+combined_plot <- wrap_plots(plots, ncol = 4)
+ggsave('../plots/temp.png',combined_plot, width = 16, height =10)
+
+### belwow is for plotting
+temp = dfm
+id = dfms$X[rownames(dfms) == target]
+pp = ggplot(temp, aes(x = x_centroid, y = y_centroid)) +
+  geom_point(data = subset(temp, X != id),
+             aes(color = snapres1_ann), size = 0.2, stroke = 0.2, alpha = 1) +
+  geom_point(data = subset(temp, X == id), 
+             color = "black", size = 1.5, alpha = 1) +
+  scale_color_brewer(palette = "Set3") +
+  labs(color = "Cell Type") +
+  theme_classic() +
+  theme(legend.position = "right")+
+  guides(color = guide_legend(override.aes = list(size = 10)))
+ggsave('../plots/tempc.png',pp, width = 9, height = 7)
+```
+
+
+
+### added for response question
+
+
+```{r}
+library(dplyr)
+
+df1 = read.csv('../../gd_xton/data/Xton_300GD.csv')
+df1 <- df1 %>%
+  filter(if_all(everything(), ~ . != ""))
+
+## add b cell sub type information
+df1$snapa[df1$snapn %in% c(7,13)] = 'gcrB'
+df1$feata[df1$featn %in% c(3)] = 'gcrB'
+## remove undef
+`%notin%` <- Negate(`%in%`)
+indx <- which((df1$GD %notin% c('undef', 'mixture', 'dirt')))
+
+## calc accu
+sum(df1$snapa[indx] == df1$GD[indx]) / length(df1$GD[indx])
+
+sum(df1$feata[indx] == df1$GD[indx]) / length(df1$GD[indx])
+```
+
+
+
+
+
+#### for checking is cell type label is correct???
+
+
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+
+dff = read.csv('../data/spleen_gd_500_full.csv')
+features = c('Ly6C', 'TCR', 'Ly6G', 'CD19',
+       'CD169', 'CD106', 'CD3', 'CD1632', 'CD8a', 'CD90', 'F480', 'CD11c',
+       'Ter119', 'CD11b', 'IgD', 'CD27', 'CD5', 'CD79b', 'CD71', 'CD31', 'CD4',
+       'IgM', 'B220', 'ERTR7', 'MHCII', 'CD35', 'CD2135', 'CD44', 'nucl',
+       'NKp46')
+rownames(dff) = paste0('cell_', as.character(c(1:nrow(dff))))
+library(Seurat)
+
+seurat_obj <- CreateSeuratObject(counts = t(dff[, features]))
+seurat_obj@meta.data$fine_ann = dff$snapres1_ann
+seurat_obj@meta.data$snap_c = dff$snapres1
+Idents(seurat_obj) <- "fine_ann"
+```
+
+```{r}
+feature_to_plot <- "CD19"
+cell_to_highlight <- "cell_1"
+
+ridge_plot <- RidgePlot(seurat_obj, features = feature_to_plot)
+ridge_data <- ridge_plot$data
+ridge_data$cell = rownames(ridge_data)
+highlight_data <- ridge_data %>% 
+  filter(cell == cell_to_highlight)
+colnames(highlight_data)[1] = 'expression'
+# Add annotation for the specific cell
+ridge_plot <- ridge_plot + 
+  geom_text(data = highlight_data, 
+            aes(x = expression, y = ident, label = round(expression, 2)),
+            color = "black", size = 3, vjust = -0.5)
+
+ridge_plot
+```
+
+```{r}
+df2 = read.csv('../data/save_spleen_ann_0328.csv')
+dfform = dff[,c('snapres1_ann', 'snapres1', 'X')]
+dfform$featres1_ann = df2$feature_res1_ann[match(dff$X, df2$X)]
+dfform$featres1 = df2$feature_res1[match(dff$X, df2$X)]
+#write.csv(dfform, '../data/spleen_gd_500form_updatedV3.csv')
+```
+
+######## updated version
+
+```{r}
+#dff
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+df = read.csv('../data/features_and_metadataV2.csv')
+```
+
+```{r}
+target = 'cell_300'
+genes_to_plot <- c("CD19", "CD4", "CD8a", 'F480', 'CD3', 'B220', 'CD106', 'MHCII', 'Ter119')
+cell_to_highlight <- target
+
+plots <- lapply(genes_to_plot, function(feature_to_plot) {
+  ridge_plot <- RidgePlot(seurat_obj, features = feature_to_plot)
+  ridge_data <- ridge_plot$data
+  ridge_data$cell <- rownames(ridge_data)
+  highlight_data <- ridge_data %>% filter(cell == cell_to_highlight)
+  colnames(highlight_data)[1] <- 'expression'
+  ridge_plot <- ridge_plot + 
+    geom_text(data = highlight_data, 
+              aes(x = expression, y = ident, label = round(expression, 2)),
+              color = "black", size = 3, vjust = -0.5) +
+    ggtitle(paste("Ridge Plot for", feature_to_plot)) +
+  theme(legend.position = "none")
+  return(ridge_plot)
+})
+
+combined_plot <- wrap_plots(plots, ncol = 3)
+ggsave('../plots/temp.png',combined_plot, width = 12, height =9)
+
+temp = df
+id = dff$X[rownames(dff) == target]
+pp = ggplot(temp, aes(x = centroid_x, y = centroid_y)) +
+  geom_point(data = subset(temp, X != id),
+             aes(color = cluster.termV2), size = 0.3, alpha = 1) +
+  geom_point(data = subset(temp, X == id), 
+             color = "black", size = 1.5, alpha = 1) +
+  scale_color_brewer(palette = "Set3") +
+  labs(color = "Cell Type") +
+  theme_classic() +
+  theme(legend.position = "right")+
+  guides(color = guide_legend(override.aes = list(size = 10)))
+ggsave('../plots/tempc.png',pp, width = 9, height = 7)
+
+```
+
+
+
+
+
+
+

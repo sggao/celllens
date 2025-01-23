@@ -1,0 +1,85 @@
+
+########### below is line plot
+
+
+```{r}
+library(ggplot2)
+library(paletteer)
+
+metrics = read.csv("../../local_bench/data/spleen/CH_result_spleen_0327.csv")
+metrics2 = read.csv('../data/CH_result_spleen_FNINIO.csv')
+metricsall = rbind(metrics, metrics2)
+
+## base line
+metricsall = subset(metricsall, metricsall$variable %in%  c("ch_FN", "ch_IN", "ch_IO", 'ch_snap'))
+
+colors <- c("red", "#3CB44B", "#FFE119", "#4363D8", "#F58231")
+
+p = ggplot(metricsall, aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen CH") + scale_color_manual(values = 
+colors) + scale_fill_manual(values = colors)
+#ggsave("../plots/ch_spleen_res020304.svg", height = 3, width = 5)
+p
+```
+
+```{r}
+metrics = read.csv("../../local_bench/data/spleen/SS_result_spleen_0327.csv")
+metrics2 = read.csv('../data/SS_result_spleen_FNINIO.csv')
+metricsall = rbind(metrics, metrics2)
+
+## base line
+metricsall = subset(metricsall, metricsall$variable %in%  c("ch_FN", "ch_IN", "ch_IO", 'ch_snap'))
+
+colors <- c("red", "#3CB44B", "#FFE119", "#4363D8", "#F58231")
+
+p = ggplot(metricsall, aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen SS") + scale_color_manual(values = 
+colors) + scale_fill_manual(values = colors)
+#ggsave("../plots/ch_spleen_res020304.svg", height = 3, width = 5)
+p
+```
+
+```{r}
+metrics = read.csv("../../local_bench/data/spleen/Mod_result_spleen_0327.csv")
+metrics2 = read.csv('../data/Mod_result_spleen_FNINIO.csv')
+metricsall = rbind(metrics, metrics2)
+
+## base line
+metricsall = subset(metricsall, metricsall$variable %in%  c("ch_FN", "ch_IN", "ch_IO", 'ch_snap'))
+
+colors <- c("red", "#3CB44B", "#FFE119", "#4363D8", "#F58231")
+
+p = ggplot(metricsall, aes(x=res,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen Mod") + scale_color_manual(values = 
+colors) + scale_fill_manual(values = colors)
+#ggsave("../plots/ch_spleen_res020304.svg", height = 3, width = 5)
+p
+```
+
+
+```{r}
+metrics = read.csv("../../local_bench/data/spleen/DB_result_spleen_0327.csv")
+metrics2 = read.csv('../data/DB_result_spleen_FNINIO.csv')
+metricsall = rbind(metrics, metrics2)
+
+## base line
+metricsall = subset(metricsall, metricsall$variable %in%  c("ch_FN", "ch_IN", "ch_IO", 'ch_snap'))
+
+colors <- c("red", "#3CB44B", "#FFE119", "#4363D8", "#F58231")
+
+p = ggplot(metricsall, aes(x=k,y=value, colour=variable,fill = variable)) +
+  stat_summary(geom = "line", fun.y = mean, size = 0.6) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), alpha = 0.3, colour = NA) +
+  theme_classic()+ ggtitle("spleen DB") + scale_color_manual(values = 
+colors) + scale_fill_manual(values = colors)
+#ggsave("../plots/ch_spleen_res020304.svg", height = 3, width = 5)
+p
+```
+
+

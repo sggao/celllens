@@ -1,0 +1,160 @@
+---
+title: "liver_plot"
+output: html_document
+---
+
+
+
+######### cell type location plotting
+
+```{r}
+df_meta = read.csv('../data/livcan_meta_y4_x69_withClusters_0327.csv')
+df_meta2 = read.csv('../data/livcan_meta_y4_x69_withClusters_spagcn.csv')
+
+ggc = c("grey57","#D20062", "#FB8072", "#A6CEE3",
+                                "#1F78B4", "#B2DF8A", "#33A02C",
+                                "#FFAF45")
+names(ggc) = c('Tumor',
+    'T',
+    'Stellate',
+    'Other',
+    'Macrophage',
+    'LSEC',
+    'Hepatocytes',
+    'B')
+
+```
+
+
+#### only do snap macropahge subsets locations
+
+```{r}
+df_meta_sub = subset(df_meta, df_meta2$spagcnres1 %in% c(2) | df_meta$snapres1_ann == 'Tumor')
+df_meta_sub2 = subset(df_meta2, df_meta2$spagcnres1 %in% c(2) | df_meta$snapres1_ann == 'Tumor')
+
+df_meta_sub$temp = 'Other'
+df_meta_sub$temp[df_meta_sub$snapres1_ann == 'Tumor'] = 'Tumor'
+df_meta_sub$temp[df_meta_sub2$spagcnres1 == 2] = 'target'
+
+ggc = c("grey57","black", "red")
+names(ggc) = c('Tumor',
+    'Other',
+    'target')
+
+df_meta_sub$size = 1
+df_meta_sub$size[df_meta_sub$temp == 'target'] = 2
+
+library(ggplot2)
+
+p = ggplot(df_meta_sub, aes(x = x_slide_mm, y = y_slide_mm, color = temp)) +
+    geom_point(aes(size = size), stroke = 0.1) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+      scale_color_manual(values = ggc) + 
+    theme(
+      plot.background = element_rect(fill = "black")
+      ) +
+  scale_size(range = c(0.2, 0.4)) #+ scale_stroke(range = c(0.1, 0.2))
+ggsave("../plots/spagcn_m2.png",p ,height = 3.5, width = 4)
+p
+```
+
+
+```{r}
+df_meta_sub = subset(df_meta, df_meta2$spagcnres1 %in% c(15) | df_meta$snapres1_ann == 'Tumor')
+df_meta_sub2 = subset(df_meta2, df_meta2$spagcnres1 %in% c(15) | df_meta$snapres1_ann == 'Tumor')
+
+df_meta_sub$temp = 'Other'
+df_meta_sub$temp[df_meta_sub$snapres1_ann == 'Tumor'] = 'Tumor'
+df_meta_sub$temp[df_meta_sub2$spagcnres1 == 15] = 'target'
+
+ggc = c("grey57","black", "red")
+names(ggc) = c('Tumor',
+    'Other',
+    'target')
+
+df_meta_sub$size = 1
+df_meta_sub$size[df_meta_sub$temp == 'target'] = 2
+
+p = ggplot(df_meta_sub, aes(x = x_slide_mm, y = y_slide_mm, color = temp)) +
+    geom_point(aes(size = size), stroke = 0.1) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+      scale_color_manual(values = ggc) + 
+    theme(
+      plot.background = element_rect(fill = "black")
+      ) +
+  scale_size(range = c(0.2, 0.4)) #+ scale_stroke(range = c(0.1, 0.2))
+ggsave("../plots/spagcn_m15.png",p ,height = 3.5, width = 4)
+p
+```
+
+
+#### umap plotting:
+
+```{r}
+ssnap = read.csv('../data/spagcn_liv.csv')
+ssnap$X = NULL # first row is rnum
+colnames(ssnap) = paste0('PC_', rep(1:ncol(ssnap)))
+rownames(ssnap) = paste0('cell_', rep(1:nrow(ssnap)))
+
+library(Seurat)
+snp <- CreateSeuratObject(counts = t(ssnap), assay = "cnp")
+SetAssayData(object = snp, slot = "data", new.data =t(ssnap), assay="cnp")
+snp <- ScaleData(snp) 
+snp<- RunPCA(snp, features = rownames(snp))
+snp <-  FindNeighbors(snp, dims = 1:29)
+
+# umap plotting
+snp <- RunUMAP(snp, dims = 1:29, seed.use = 1)
+
+library(Polychrome)
+set.seed(42)
+P26 = createPalette(26,  c("#010101", "#ff0000"), M=1000)
+swatch(P26)
+
+embd = data.frame(umap1 = snp@reductions$umap@cell.embeddings[,1],
+                  umap2 = snp@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta2$spagcnres1))
+
+bkc = P26
+names(bkc) = c('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
+               '12', '14', '13', '15', '16', '17', '18', '19','20','21','22',
+               '23','24','25')
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 0.2, stroke = 0), cex = 0.7) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = bkc)
+ggsave("../plots/umap_liver_spagcn.png",p1, height = 7, width = 7.8)
+p1
+```
+
+
+
+
+
+

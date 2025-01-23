@@ -1,0 +1,155 @@
+
+
+#### for checking is cell type label is correct???
+
+```{r}
+# quick fix 
+ddd = read.csv('../data/spleen_gd_500form.csv', row.names = 1)
+new_cluster_names <- c(
+    '0' = 'B', '1' = 'CD8', '2' = 'B', '3' = 'CD4', '4' = 'CD4', 
+    '5' = 'Macrophage', '6' = 'B', '7' = 'B', '8' = 'DC', '9' = 'CD4', 
+    '10' = 'B', '11' = 'Fibro/Epi', '12' = 'B', '13' = 'Macrophage', 
+    '14' = 'Other', '15' = 'Erythrocyte', '16' = 'NK', '17' = 'Vessel', 
+    '18' = 'CD4', '19' = 'Monocyte', '20' = 'B', '21' = 'CD8', 
+    '22' = 'Erythrocyte', '23' = 'Neutrophil', '24' = 'NK'
+)
+df <- ddd %>%
+    mutate(fine_ann = recode(snapres1, !!!new_cluster_names))
+head(df)
+df$snapres1_ann = NULL
+write.csv(df, '../data/spleen_gd_500formv2.csv')
+```
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+
+dff = read.csv('../data/spleen_gd_500_full.csv')
+features = c('Ly6C', 'TCR', 'Ly6G', 'CD19',
+       'CD169', 'CD106', 'CD3', 'CD1632', 'CD8a', 'CD90', 'F480', 'CD11c',
+       'Ter119', 'CD11b', 'IgD', 'CD27', 'CD5', 'CD79b', 'CD71', 'CD31', 'CD4',
+       'IgM', 'B220', 'ERTR7', 'MHCII', 'CD35', 'CD2135', 'CD44', 'nucl',
+       'NKp46')
+rownames(dff) = paste0('cell_', as.character(c(1:nrow(dff))))
+library(Seurat)
+
+seurat_obj <- CreateSeuratObject(counts = t(dff[, features]))
+seurat_obj@meta.data$fine_ann = dff$snapres1_ann
+seurat_obj@meta.data$snap_c = dff$snapres1
+Idents(seurat_obj) <- "fine_ann"
+```
+
+```{r}
+feature_to_plot <- "CD19"
+cell_to_highlight <- "cell_1"
+
+ridge_plot <- RidgePlot(seurat_obj, features = feature_to_plot)
+ridge_data <- ridge_plot$data
+ridge_data$cell = rownames(ridge_data)
+highlight_data <- ridge_data %>% 
+  filter(cell == cell_to_highlight)
+colnames(highlight_data)[1] = 'expression'
+# Add annotation for the specific cell
+ridge_plot <- ridge_plot + 
+  geom_text(data = highlight_data, 
+            aes(x = expression, y = ident, label = round(expression, 2)),
+            color = "black", size = 3, vjust = -0.5)
+
+ridge_plot
+```
+
+```{r}
+df2 = read.csv('../data/save_spleen_ann_0328.csv')
+dfform = dff[,c('snapres1_ann', 'snapres1', 'X')]
+dfform$featres1_ann = df2$feature_res1_ann[match(dff$X, df2$X)]
+dfform$featres1 = df2$feature_res1[match(dff$X, df2$X)]
+#write.csv(dfform, '../data/spleen_gd_500form_updatedV3.csv')
+```
+
+######## updated version
+
+```{r}
+#dff
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+df = read.csv('../data/features_and_metadataV2.csv')
+```
+
+```{r}
+target = 'cell_283'
+genes_to_plot <- c("CD19", "CD4", "CD8a", 'F480', 'CD3', 'B220', 'CD106', 'MHCII', 'CD2135')
+cell_to_highlight <- target
+
+plots <- lapply(genes_to_plot, function(feature_to_plot) {
+  ridge_plot <- RidgePlot(seurat_obj, features = feature_to_plot)
+  ridge_data <- ridge_plot$data
+  ridge_data$cell <- rownames(ridge_data)
+  highlight_data <- ridge_data %>% filter(cell == cell_to_highlight)
+  colnames(highlight_data)[1] <- 'expression'
+  ridge_plot <- ridge_plot + 
+    geom_text(data = highlight_data, 
+              aes(x = expression, y = ident, label = round(expression, 2)),
+              color = "black", size = 3, vjust = -0.5) +
+    ggtitle(paste("Ridge Plot for", feature_to_plot)) +
+  theme(legend.position = "none")
+  return(ridge_plot)
+})
+
+combined_plot <- wrap_plots(plots, ncol = 3)
+ggsave('../plots/temp.png',combined_plot, width = 12, height =9)
+
+temp = df
+id = dff$X[rownames(dff) == target]
+pp = ggplot(temp, aes(x = centroid_x, y = centroid_y)) +
+  geom_point(data = subset(temp, X != id),
+             aes(color = cluster.termV2), size = 0.3, alpha = 1) +
+  geom_point(data = subset(temp, X == id), 
+             color = "black", size = 1.5, alpha = 1) +
+  scale_color_brewer(palette = "Set3") +
+  labs(color = "Cell Type") +
+  theme_classic() +
+  theme(legend.position = "right")+
+  guides(color = guide_legend(override.aes = list(size = 10)))
+ggsave('../plots/tempc.png',pp, width = 9, height = 7)
+
+```
+
+
+########### added for response writing
+
+```{r}
+library(dplyr)
+
+df1 = read.csv('../data/spleen_gd_500form_updatedV3.csv')
+df1 <- df1 %>%
+  filter(if_all(everything(), ~ . != ""))
+df2 = read.csv('../../spln_spagcn/data/save_spleen_ann_spagcn.csv')
+
+##
+df2_gd = df2[df1$X+1,]
+df1$spagcnres1_ann = df2_gd$spagcnres1_ann
+df1$spagcnres1 = df2_gd$spagcnres1
+
+## add b cell sub type information
+df1$snapres1_ann[df1$snapres1 %in% c(2,6,7,10,12)] = 'gcrB'
+df1$spagcnres1_ann[df1$spagcnres1 %in% c(0, 1,5,8)] = 'gcrB'
+df1$featres1_ann[df1$featres1 %in% c(5,9)] = 'gcrB'
+df1$spagcnres1_ann[df1$spagcnres1_ann == 'Fibro/stromal'] = 'Fibro/Epi'
+## remove undef
+`%notin%` <- Negate(`%in%`)
+indx <- which((df1$GD %notin% c('undef', 'mixture', 'dirt')))
+
+## calc accu
+sum(df1$snapres1_ann[indx] == df1$GD[indx]) / length(df1$GD[indx])
+
+sum(df1$featres1_ann[indx] == df1$GD[indx]) / length(df1$GD[indx])
+
+sum(df1$spagcnres1_ann[indx] == df1$GD[indx]) / length(df1$GD[indx])
+```
+
+
+
+

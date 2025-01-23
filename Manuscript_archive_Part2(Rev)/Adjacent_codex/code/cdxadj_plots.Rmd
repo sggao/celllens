@@ -1,0 +1,218 @@
+
+#### first confirm the clusters
+
+```{r}
+df = read.csv('../data/s2f2_annNum_1113.csv')
+plotdf = data.frame(x = df$X_cent, y = df$Y_cent, clustn = df$snapres)
+group.colors <- c( "clust" = "#FF1E00", "None" = "#FFFFFF00")
+clusters = c(0:23)
+i = 0
+listplot = list()
+for(clust in clusters){ # do this by cluster number
+  i = i + 1
+  print(clust)
+  temp = plotdf
+  temp$plot = "None"
+  temp$plot[temp$clustn == clust] = "clust"
+  
+  p = ggplot(temp, aes(x = x, y = y, color = plot)) +
+    geom_point(size = 0.2, stroke = 0.2) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+    scale_color_manual(values=group.colors)
+  listplot[[i]] <- p
+  assign(paste0("p", i), p)
+}
+
+library(patchwork)
+pp = wrap_plots(listplot, ncol = 6)
+#pp
+ggsave("../plots/s2f2.png", pp, height = 12, width = 18)
+#p
+```
+
+
+```{r}
+df = read.csv('../data/s3f2_annNum_1113.csv')
+plotdf = data.frame(x = df$X_cent, y = df$Y_cent, clustn = df$snapres)
+group.colors <- c( "clust" = "#FF1E00", "None" = "#FFFFFF00")
+clusters = c(0:11,13:21)
+i = 0
+listplot = list()
+for(clust in clusters){ # do this by cluster number
+  i = i + 1
+  print(clust)
+  temp = plotdf
+  temp$plot = "None"
+  temp$plot[temp$clustn == clust] = "clust"
+  
+  p = ggplot(temp, aes(x = x, y = y, color = plot)) +
+    geom_point(size = 0.2, stroke = 0.2) + theme_classic() +
+    theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="none",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank(),
+      plot.margin = unit(c(0.0001,0.0001,0.0001,0.0001), "mm")) +
+    scale_color_manual(values=group.colors)
+  listplot[[i]] <- p
+  assign(paste0("p", i), p)
+}
+
+library(patchwork)
+pp = wrap_plots(listplot, ncol = 6)
+#pp
+ggsave("../plots/s3f2.png", pp, height = 12, width = 18)
+#p
+```
+
+######## below here is for umap plotting
+
+
+```{r}
+df_meta = read.csv('../data/s2f2_annNum_1113.csv')
+snap = read.csv('../data/s2f2_double_snap_combo.csv')
+rownames(snap) = paste0('cell_', rep(1:nrow(snap)))
+
+## remove cluster from tissue artifact false bg signal
+df_meta2 = subset(df_meta, df_meta$snapres != 23)
+snap2 = subset(snap, df_meta$snapres != 23)
+
+library(Seurat)
+featt <- CreateSeuratObject(counts = t(snap2), assay = "cnp")
+SetAssayData(object = featt, slot = "data", new.data =t(snap2), assay="cnp")
+featt <- ScaleData(featt) 
+featt<- RunPCA(featt, features = rownames(featt))
+featt <-  FindNeighbors(featt, dims = 1:20)
+featt <- RunUMAP(featt, dims = 1:20)
+```
+
+```{r}
+df_meta2$snapres1[df_meta2$snapres == 0] = 'CD4'
+df_meta2$snapres1[df_meta2$snapres == 1] = 'gcB'
+df_meta2$snapres1[df_meta2$snapres == 2] = 'B'
+df_meta2$snapres1[df_meta2$snapres == 3] = 'CD8'
+df_meta2$snapres1[df_meta2$snapres == 4] = 'Macrophage'
+df_meta2$snapres1[df_meta2$snapres == 5] = 'B'
+df_meta2$snapres1[df_meta2$snapres == 6] = 'gcB'
+df_meta2$snapres1[df_meta2$snapres == 7] = 'Fibro/Epi'
+df_meta2$snapres1[df_meta2$snapres == 8] = 'Fibro/Epi'
+df_meta2$snapres1[df_meta2$snapres == 9] = 'Other'
+df_meta2$snapres1[df_meta2$snapres == 10] = 'Other'
+df_meta2$snapres1[df_meta2$snapres == 11] = 'fDC'
+df_meta2$snapres1[df_meta2$snapres == 12] = 'Prolif cell'
+df_meta2$snapres1[df_meta2$snapres == 13] = 'Macrophage'
+df_meta2$snapres1[df_meta2$snapres == 14] = 'Other'
+df_meta2$snapres1[df_meta2$snapres == 15] = 'Treg'
+df_meta2$snapres1[df_meta2$snapres == 16] = 'Prolif cell'
+df_meta2$snapres1[df_meta2$snapres == 17] = 'Vessel'
+df_meta2$snapres1[df_meta2$snapres == 18] = 'Plasma cell'
+df_meta2$snapres1[df_meta2$snapres == 19] = 'CD4'
+df_meta2$snapres1[df_meta2$snapres == 20] = 'Neutrophil'
+df_meta2$snapres1[df_meta2$snapres == 21] = 'Vessel'
+df_meta2$snapres1[df_meta2$snapres == 22] = 'CD8'
+```
+
+```{r}
+library(Polychrome)
+set.seed(42)
+P25 = createPalette(13,  c("#010101", "#ff0000"), M=1000)
+P25_re = P25[sample(length(P25), length(P25))]
+#swatch(P25_re)
+bkc = P25_re
+names(bkc) = c('B', 'CD4', 'CD8', 'fDC', 'Fibro/Epi', 'gcB', 'Macrophage',
+               'Neutrophil', 'Other', 'Plasma cell', 'Prolif cell', 'Treg', 'Vessel')
+```
+
+```{r}
+embd = data.frame(umap1 = featt@reductions$umap@cell.embeddings[,1],
+                  umap2 = featt@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta2$snapres1))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.5) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = bkc) + guides(color = guide_legend(override.aes = list(size = 4)))
+ggsave("../plots/umap_cdx_s2f2.png",p1,height = 6, width = 7.8)
+p1
+```
+
+
+##### slide 3
+
+```{r}
+df_meta = read.csv('../data/s3f2_annNum_1113.csv')
+snap = read.csv('../data/s3f2_double_snap_combo.csv')
+rownames(snap) = paste0('cell_', rep(1:nrow(snap)))
+
+## remove cluster from tissue artifact false bg signal
+df_meta2 = subset(df_meta, df_meta$snapres != 12)
+snap2 = subset(snap, df_meta$snapres != 12)
+
+library(Seurat)
+featt <- CreateSeuratObject(counts = t(snap2), assay = "cnp")
+SetAssayData(object = featt, slot = "data", new.data =t(snap2), assay="cnp")
+featt <- ScaleData(featt) 
+featt<- RunPCA(featt, features = rownames(featt))
+featt <-  FindNeighbors(featt, dims = 1:20)
+featt <- RunUMAP(featt, dims = 1:20)
+```
+
+```{r}
+df_meta2$snapres1[df_meta2$snapres == 0] = 'B'
+df_meta2$snapres1[df_meta2$snapres == 1] = 'CD4'
+df_meta2$snapres1[df_meta2$snapres == 2] = 'gcB'
+df_meta2$snapres1[df_meta2$snapres == 3] = 'Other'
+df_meta2$snapres1[df_meta2$snapres == 4] = 'CD8'
+df_meta2$snapres1[df_meta2$snapres == 5] = 'fDC'
+df_meta2$snapres1[df_meta2$snapres == 6] = 'Fibro/Epi'
+df_meta2$snapres1[df_meta2$snapres == 7] = 'gcB'
+df_meta2$snapres1[df_meta2$snapres == 8] = 'Fibro/Epi'
+df_meta2$snapres1[df_meta2$snapres == 9] = 'Macrophage'
+df_meta2$snapres1[df_meta2$snapres == 10] = 'Prolif cell'
+df_meta2$snapres1[df_meta2$snapres == 11] = 'Other'
+df_meta2$snapres1[df_meta2$snapres == 13] = 'Macrophage'
+df_meta2$snapres1[df_meta2$snapres == 14] = 'CD4'
+df_meta2$snapres1[df_meta2$snapres == 15] = 'Macrophage'
+df_meta2$snapres1[df_meta2$snapres == 16] = 'Vessel'
+df_meta2$snapres1[df_meta2$snapres == 17] = 'Vessel'
+df_meta2$snapres1[df_meta2$snapres == 18] = 'Treg'
+df_meta2$snapres1[df_meta2$snapres == 19] = 'Neutrophil'
+df_meta2$snapres1[df_meta2$snapres == 20] = 'Plasma cell'
+df_meta2$snapres1[df_meta2$snapres == 21] = 'Plasma cell'
+```
+
+```{r}
+embd = data.frame(umap1 = featt@reductions$umap@cell.embeddings[,1],
+                  umap2 = featt@reductions$umap@cell.embeddings[,2],
+                  label = as.character(df_meta2$snapres1))
+
+library(ggplot2)
+p1 = ggplot(embd)  + 
+  geom_point(aes(x=umap1, y=umap2, color=label,size = 2,stroke = 0), cex = 0.5) +
+  labs( x = "tsne 1", y = "tsne 2") + theme_classic() + ggtitle("sr") +
+  scale_color_manual(values = bkc) + guides(color = guide_legend(override.aes = list(size = 4)))
+ggsave("../plots/umap_cdx_s3f2.png",p1,height = 6, width = 7.8)
+p1
+```
+
+

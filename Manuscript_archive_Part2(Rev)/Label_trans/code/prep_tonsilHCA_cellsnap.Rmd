@@ -1,0 +1,65 @@
+---
+title: "prep_tonsilHCA"
+output: html_document
+---
+
+Prep from source data
+
+```{r}
+hcatonsil = readRDS('../../../../MESA_all/bokai_local/Tonsil_HCA/data/scRNA-seq/20230911_tonsil_atlas_rna_seurat_obj.rds')
+### subset out stuff
+hcatonsil2 = subset(hcatonsil, subset = assay == '3P')
+hcatonsil3 = subset(hcatonsil2, subset = preservation == 'fresh')
+table(hcatonsil3$annotation_level_1)
+```
+
+```{r}
+### use sketch to subset cells?
+hcatonsil3_50k <- SketchData(
+  object = hcatonsil3,
+  ncells = 50000,
+  method = "LeverageScore",
+  sketched.assay = "sketch"
+)
+```
+
+
+
+
+
+```{r}
+targetcell = unique(hcatonsil3$annotation_level_1)
+hcatonsil4 = subset(hcatonsil3, subset = annotation_level_1 %in% targetcell)
+
+# subsample to 80k cells for easiness
+set.seed(42)
+ridx = sample(dim(hcatonsil4)[2], 80000)
+hcatonsil5 = hcatonsil4[,ridx]
+hcatonsil5 # 100k cells
+
+# to further save loading only save out hvg
+library(Seurat)
+hcatonsil5 = FindVariableFeatures(hcatonsil5, nfeatures = 5000)
+
+## save out genes
+gg = data.frame(genes = VariableFeatures(hcatonsil5))
+write.csv(gg, '../data/5k_vg_names.csv', row.names = FALSE)
+
+## save out counts
+counts = hcatonsil5@assays$RNA@counts[VariableFeatures(hcatonsil5),]
+counts = as.data.frame(t(as.matrix(counts)))
+write.csv(counts, '../data/tonsil_80k_5khvg_counts.csv', row.names = FALSE)
+
+## save out normed
+data = hcatonsil5@assays$RNA@data[VariableFeatures(hcatonsil5),]
+data = as.data.frame(t(as.matrix(data)))
+write.csv(data, '../data/tonsil_80k_5khvg_normed.csv', row.names = FALSE)
+
+## save out meta data
+write.csv(hcatonsil5@meta.data, '../data/tonsil_80k_meta.csv')
+```
+
+
+
+
+
