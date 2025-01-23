@@ -1,4 +1,4 @@
-# CellLENS
+# CellSNAP
 
 [![Python Versions](https://img.shields.io/pypi/pyversions/cellsnap.svg)](https://pypi.org/project/cellsnap)
 [![PyPI Version](https://img.shields.io/pypi/v/cellsnap.svg)](https://pypi.org/project/cellsnap)
