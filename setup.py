@@ -9,7 +9,7 @@ setuptools.setup(
     author="Sheng Gao, Bokai Zhu",
     author_email="gaosheng0321@gmail.com, zhubokai@mit.edu",
     description="A package for enhancing single-cell population delineation by integrating cross-domain information.",
-    long_description="Official implementation of Cell Spatial And Neighborhood Pattern (CellLENS), a computational method that learns a single-cell representation embedding by integrating cross-domain information from tissue samples. Through the analysis of datasets spanning spatial proteomic and spatial transcriptomic modalities, and across different tissue types and disease settings, we demonstrate CellLENS’s capability to elucidate biologically relevant cell populations that were previously elusive due to the relinquished tissue morphological information from images",
+    long_description="Official implementation of Cell Local Environment Neighborhood Scan (CellLENS), a computational method that learns a single-cell representation embedding by integrating cross-domain information from tissue samples. Through the analysis of datasets spanning spatial proteomic and spatial transcriptomic modalities, and across different tissue types and disease settings, we demonstrate CellLENS’s capability to elucidate biologically relevant cell populations that were previously elusive due to the relinquished tissue morphological information from images",
     long_description_content_type="text/markdown",
     url="https://github.com/sggao/celllens",
     packages=setuptools.find_packages(),
