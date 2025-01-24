@@ -43,7 +43,7 @@ class LENS_Dataset(Dataset):
         path2img : str, optional
             Path to images (to be saved, output from function '.prepare_images') if using images to extract morphological information (CNN step)
         use_transform : bool
-            Indicate whether to use data augmentation if using images to extract morphological information (CNN step)
+            Indicate whether to use data augmentation if using images to extract morphological information (CNN step). Suggest avoiding using transformation.
 
         """
 

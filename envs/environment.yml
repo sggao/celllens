@@ -297,5 +297,7 @@ dependencies:
       - torch-geometric==2.3.0
       - triton==2.0.0
       - tzdata==2023.3
+      - transformers==4.48.1
+      - tqdm==4.67.1
       - validclust==0.1.1
 prefix: /home/sheng/miniconda3/envs/super-resolution

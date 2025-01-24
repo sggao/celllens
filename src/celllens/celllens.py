@@ -12,14 +12,15 @@ import scanpy as sc
 from .models import *
 import torch.optim as optim
 from matplotlib import pyplot as plt
-
+from tqdm import tqdm
+import time
 
 class CellLENS:
 
     def __init__(self,
                  dataset,
                  device,
-                 cnn_model=None,
+                 cnn_model='LITE',
                  cnn_latent_dim=128,
                  gnn_latent_dim=33,
                  proj_dim=32,
@@ -34,8 +35,9 @@ class CellLENS:
             Obtained from CellLENS previous step (dataset preparation).
         device : str
             gpu or cpu device name.
-        cnn_model : bool
-            Default None, will implement CellLENS without image morphology information.
+        cnn_model : str
+            Default 'LITE', which will skip the CNN image featuer extraction process (for tissue morphology information extraction). Other available architectures include:
+            'CNN', which uses a Alex-Net like architecture; 'ViT', which uses a ViT transformer architecture.
         cnn_latent_dim : int
             Default 128. Latent dimension for LENS-CNN model.
         gnn_latent_dim : int
@@ -54,8 +56,14 @@ class CellLENS:
         self.n_cell = self.dataset.dual_labels.shape[0]
         self.gnn_latent_dim = gnn_latent_dim
         self.cnn_latent_dim = cnn_latent_dim
-        self.embed_dim = fc_out_dim + cnn_out_dim if cnn_model else gnn_latent_dim
-        self.cnn_model = cnn_model
+        ## set embed_dim
+        if cnn_model == 'LITE':
+            self.embed_dim = gnn_latent_dim
+        else:
+            self.embed_dim = fc_out_dim + cnn_out_dim
+        
+        #self.embed_dim = fc_out_dim + cnn_out_dim if cnn_model else gnn_latent_dim
+        #self.cnn_model = cnn_model
         self.proj_dim = proj_dim
         self.fc_out_dim = fc_out_dim
         self.cnn_out_dim = cnn_out_dim
@@ -71,7 +79,8 @@ class CellLENS:
                      optimizer_kwargs=None,
                      SchedulerAlg=None,
                      scheduler_kwargs=None,
-                     print_every=10):
+                     print_every=10,
+                     cnn_model='CNN'):
         """
         Train LENS-CNN to extract morphology encoding.
         Parameters
@@ -91,14 +100,21 @@ class CellLENS:
         optimizer_kwargs : None
         print_every : int
             Log print frequency.
+        cnn_model : str
+            Architecture to use.
         """
 
         print(
             '\n=============Training convolutional neural network============\n',
             flush=True)
-        self.cnn_model = LENS_CNN(self.cnn_latent_dim, self.output_dim)
-        # enable data augmentation
-        self.dataset.use_transform = True
+        #self.cnn_model = LENS_CNN(self.cnn_latent_dim, self.output_dim)
+        if cnn_model == 'CNN':
+            self.cnn_model = LENS_CNN(self.cnn_latent_dim, self.output_dim)
+        if cnn_model == 'ViT':
+            self.cnn_model = ViT(self.cnn_latent_dim, self.output_dim) # ViT structure
+
+        # avoid using data augmentation - no improvment and affect IO speed
+        self.dataset.use_transform = False #True
         dataloader = torch.utils.data.DataLoader(self.dataset,
                                                  batch_size=batch_size,
                                                  shuffle=True,
@@ -113,12 +129,15 @@ class CellLENS:
             }, SchedulerAlg, scheduler_kwargs)
         criterion.to(self.device)
         self.cnn_model.train()
-        for epoch in range(1, 1 +
-                           n_epochs):  # loop over the dataset multiple times
-
+        start_time = time.time()
+        
+        for epoch in range(1, 1 + n_epochs):  # loop over the dataset multiple times
+            print(f"Epoch {epoch}/{n_epochs}")
             running_loss = 0.0
             running_sample = 0
-            for i, data in enumerate(dataloader, 0):
+
+            pbar = tqdm(dataloader, desc=f"Epoch {epoch}", unit="batch")
+            for i, data in enumerate(pbar, 0):
                 # get the inputs; data is a list of [inputs, labels]
                 inputs, labels = data
                 inputs = inputs.to(self.device).to(torch.float32)
@@ -138,6 +157,8 @@ class CellLENS:
 
                 running_loss += loss.item() * inputs.shape[0]
                 running_sample += inputs.shape[0]
+                pbar.set_postfix({"loss": f"{running_loss / running_sample:.6f}"})
+
                 if i % 100 == 99:
                     print(
                         f'===Epoch {epoch}, Step {i + 1:5d} loss: {running_loss / running_sample:.6f}==='
