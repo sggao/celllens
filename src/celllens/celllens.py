@@ -159,10 +159,10 @@ class CellLENS:
                 running_sample += inputs.shape[0]
                 pbar.set_postfix({"loss": f"{running_loss / running_sample:.6f}"})
 
-                if i % 100 == 99:
-                    print(
-                        f'===Epoch {epoch}, Step {i + 1:5d} loss: {running_loss / running_sample:.6f}==='
-                    )
+                #if i % 100 == 99:
+                #    print(
+                #        f'===Epoch {epoch}, Step {i + 1:5d} loss: {running_loss / running_sample:.6f}==='
+                #    )
 
             if epoch % print_every == 0:
                 print(
