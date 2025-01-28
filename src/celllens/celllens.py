@@ -114,11 +114,11 @@ class CellLENS:
             self.cnn_model = ViT(self.cnn_latent_dim, self.output_dim) # ViT structure
 
         # avoid using data augmentation - no improvment and affect IO speed
-        self.dataset.use_transform = False #True
+        #self.dataset.use_transform = False #True
         dataloader = torch.utils.data.DataLoader(self.dataset,
                                                  batch_size=batch_size,
                                                  shuffle=True,
-                                                 num_workers=1)
+                                                 num_workers=4)
         criterion = getattr(nn, loss_fn, nn.MSELoss)()
 
         self.cnn_model = self.cnn_model.to(self.device)
@@ -188,7 +188,7 @@ class CellLENS:
         testloader = torch.utils.data.DataLoader(self.dataset,
                                                  batch_size=batch_size,
                                                  shuffle=False,
-                                                 num_workers=1)
+                                                 num_workers=2)
         self.cnn_model.to(self.device)
         self.cnn_model.eval()
         self.cnn_embedding = np.zeros(
