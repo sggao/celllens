@@ -59,6 +59,7 @@ class CellLENS:
         ## set embed_dim
         if cnn_model == 'LITE':
             self.embed_dim = gnn_latent_dim
+            self.cnn_model = False
         else:
             self.embed_dim = fc_out_dim + cnn_out_dim
         
@@ -246,6 +247,7 @@ class CellLENS:
                 out_dim=self.output_dim,
                 input_dim=self.dataset.features.shape[1],
                 gnn_latent_dim=self.gnn_latent_dim)
+
         features = torch.from_numpy(self.dataset.features).float().to(
             self.device)
         features_edges = self.dataset.feature_edges
