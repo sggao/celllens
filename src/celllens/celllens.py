@@ -25,7 +25,8 @@ class CellLENS:
                  gnn_latent_dim=33,
                  proj_dim=32,
                  fc_out_dim=33,
-                 cnn_out_dim=11):
+                 cnn_out_dim=11,
+                 input_channel_num=2):
         """
         Initialize the CellLENS object for model training.
         Parameters
@@ -68,7 +69,8 @@ class CellLENS:
         self.proj_dim = proj_dim
         self.fc_out_dim = fc_out_dim
         self.cnn_out_dim = cnn_out_dim
-
+        self.input_channel_num = input_channel_num
+        
         return
 
     def fit_lens_cnn(self,
@@ -110,9 +112,9 @@ class CellLENS:
             flush=True)
         #self.cnn_model = LENS_CNN(self.cnn_latent_dim, self.output_dim)
         if cnn_model == 'CNN':
-            self.cnn_model = LENS_CNN(self.cnn_latent_dim, self.output_dim)
+            self.cnn_model = LENS_CNN(self.cnn_latent_dim, self.output_dim, self.input_channel_num)
         if cnn_model == 'ViT':
-            self.cnn_model = ViT(self.cnn_latent_dim, self.output_dim) # ViT structure
+            self.cnn_model = ViT(self.cnn_latent_dim, self.output_dim, self.input_channel_num) # ViT structure
 
         # avoid using data augmentation - no improvment and affect IO speed
         #self.dataset.use_transform = False #True
@@ -233,7 +235,7 @@ class CellLENS:
             Directory to save output.
         """
 
-        if self.cnn_model:
+        if self.cnn_model: #not lite version
             self.gnn_model = LENS_GNN_DUO(
                 out_dim=self.output_dim,
                 feature_input_dim=self.dataset.features.shape[1],
@@ -247,7 +249,6 @@ class CellLENS:
                 out_dim=self.output_dim,
                 input_dim=self.dataset.features.shape[1],
                 gnn_latent_dim=self.gnn_latent_dim)
-
         features = torch.from_numpy(self.dataset.features).float().to(
             self.device)
         features_edges = self.dataset.feature_edges
