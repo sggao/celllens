@@ -107,7 +107,7 @@ class CellLENS:
         cnn_model : str
             Architecture to use.
         use_amp : bool
-            Use automatic mixed precision training
+            Use automatic mixed precision training.
         """
 
         print(
