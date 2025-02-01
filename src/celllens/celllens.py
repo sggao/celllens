@@ -84,7 +84,7 @@ class CellLENS:
                      scheduler_kwargs=None,
                      print_every=10,
                      cnn_model='CNN',
-                     use_amp=True):
+                     use_amp=False):
         """
         Train LENS-CNN to extract morphology encoding.
         Parameters
