@@ -83,7 +83,8 @@ class CellLENS:
                      SchedulerAlg=None,
                      scheduler_kwargs=None,
                      print_every=10,
-                     cnn_model='CNN'):
+                     cnn_model='CNN',
+                     use_amp=True):
         """
         Train LENS-CNN to extract morphology encoding.
         Parameters
@@ -105,6 +106,8 @@ class CellLENS:
             Log print frequency.
         cnn_model : str
             Architecture to use.
+        use_amp : bool
+            Use automatic mixed precision training
         """
 
         print(
@@ -121,7 +124,8 @@ class CellLENS:
         dataloader = torch.utils.data.DataLoader(self.dataset,
                                                  batch_size=batch_size,
                                                  shuffle=True,
-                                                 num_workers=4)
+                                                 num_workers=4,
+                                                 pin_memory=True,)
         criterion = getattr(nn, loss_fn, nn.MSELoss)()
 
         self.cnn_model = self.cnn_model.to(self.device)
@@ -132,6 +136,7 @@ class CellLENS:
             }, SchedulerAlg, scheduler_kwargs)
         criterion.to(self.device)
         self.cnn_model.train()
+        scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
         start_time = time.time()
         
         for epoch in range(1, 1 + n_epochs):  # loop over the dataset multiple times
@@ -146,15 +151,18 @@ class CellLENS:
                 inputs = inputs.to(self.device).to(torch.float32)
                 labels = labels.to(self.device).to(torch.float32)
 
-                # zero the parameter gradients
-                optimizer.zero_grad()
-
                 # forward + backward + optimize
-                outputs = self.cnn_model(inputs)
-                loss = criterion(outputs, labels)
-                loss.backward()
-                optimizer.step()
-                # change learning rate
+                with torch.autocast(device_type='cuda', enabled=use_amp):
+                    outputs = self.cnn_model(inputs)
+                    loss = criterion(outputs, labels)
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+                # loss.backward()
+                # optimizer.step()
+                # zero the parameter gradients
+                optimizer.zero_grad(set_to_none=True) # set to none can modestly improve performance
+                # change learning rate if needed
                 if scheduler:
                     scheduler.step()
 
