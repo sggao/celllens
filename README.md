@@ -31,6 +31,14 @@ import celllens
 ```
 For details of the use of CellLENS, please refer to the tutorials.
 
+## Tutorials
+
+For simplified CellLENS usage, please see [Tutorial I](https://github.com/sggao/celllens/blob/main/tutorials/Tutorial_LITE_CellLENS.ipynb). This tutorial uses both feature expression and cell locations.
+
+For full version CellLENS usage, please see [Tutorial II]([https://github.com/sggao/celllens/blob/main/tutorials/Tutorial_LITE_CellLENS.ipynb](https://github.com/sggao/celllens/blob/main/tutorials/Tutorial_Full_CellLENS.ipynb)). This tutorial uses feature expression, cell locations, and tissue images.
+
+For development reasons, if you are interested in more complex architecture during CellLENS image feature learning processes, please see [Tutorial III](https://github.com/sggao/celllens/blob/main/tutorials/Optionl_Tutorial_Full_CellLENS-ViT.ipynb). This CellLENS version uses a ViT architecture during image feature learning.
+
 ## 📌 Key Parameters and Recommendations
 
 | Parameter          | Function                | Description  | Default | Recommendation |
