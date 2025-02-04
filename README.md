@@ -25,27 +25,31 @@ conda activate celllens # activate celllens vm
 pip install celllens==0.1.0 # install celllens in vm
 ```
 
-## More details
-📌 Key Parameters and Recommendations
-Parameter	Function	Description	Default	Recommendation
-nbhd_composition	SNAP_Dataset()	Number of nearest neighbors (cells) to consider when calculating the ‘neighborhood composition vector’. This vector is involved in the CellLENS training to learn local cellular patterns.	20	Generally no need to change this parameter. Could tune from 10-50, depending on the scale of the local cellular pattern.
-feature_neighbor	SNAP_Dataset()	Number of nearest neighbors to consider when linking nodes (cells) on the feature (e.g., protein expression) similarity graph for GNN training.	15	No need to change in most cases.
-spatial_neighbor	SNAP_Dataset()	Number of nearest neighbors to consider when linking nodes (cells) on the spatial (location) similarity graph for GNN training.	15	No need to change in most cases.
-pca_components	.initialize()	Number of components to use on the PCA reduced feature expression input.	25	Similar to conventional PCA selection, e.g., in scRNA-seq studies. User should decide.
-celltype	.initialize()	Column to use as initial cell type labels. If ‘feature_labels’, Leiden clustering will generate the labels, otherwise, the user can provide pre-defined labels.	feature_labels	If no pre-generated cell type information is available, use the default; otherwise, supply known labels.
-cluster_res	.initialize()	Resolution parameter for Leiden clustering to determine initial labels for CellLENS model input.	0.5	Works in most cases. Adjust if dataset is too large or small; monitor verbose printouts. Generally, 8-15 types yield optimal results.
-n_clusters	.initialize()	Number of clusters to generate during Leiden clustering. If None, resolution is used instead.	None	User can specify 8-15 clusters instead of resolution.
-size	.prepare_images()	Pixel size for cropping individual cell images used in CNN-based local tissue morphology analysis.	512	Depends on physical scale in modality. Typically, 50-200 μm works well.
-truncation	.prepare_images()	Pixel intensity quantile for binarizing (0,1) CNN model inputs.	0.9	Typically, 0.7-0.9 works well. Users should visually check images before proceeding.
-cnn_latent_dim	CellSNAP()	Size of the latent dimension (extracted image features) from CNN.	128	No need to change in most cases.
-gnn_latent_dim	CellSNAP()	Size of the latent dimension (extracted fused representation) from the duo-GNN model.	32	No need to change in most cases.
-fc_out_dim	CellSNAP()	Output dimension for expression-GNN, used as MLP head input. Larger values emphasize expression-related features.	33	No need to change in most cases.
-cnn_out_dim	CellSNAP()	Output dimension for spatial-GNN, used as MLP head input. Larger values emphasize morphological features.	11	No need to change in most cases.
-round	.get_snap_embedding()	Number of training rounds for the CellLENS duo-GNN model. Repeated training ensures robust representation.	5	No need to change in most cases.
-k	.get_snap_embedding()	SVD is run on embeddings from repeated duo-GNN training rounds. This defines the final representation's dimensions.	32	No need to change in most cases.
-
 After installation, you can import the module via
 ```
 import celllens
 ```
 For details of the use of CellLENS, please refer to the tutorials.
+
+## 📌 Key Parameters and Recommendations
+
+| Parameter          | Function                | Description  | Default | Recommendation |
+|-------------------|----------------------|------------------|---------|----------------|
+| `nbhd_composition` | `SNAP_Dataset()` | Number of nearest neighbors (cells) to consider when calculating the ‘neighborhood composition vector’. This vector is involved in the CellLENS training to learn local cellular patterns. | 20 | Generally no need to change this parameter. Could tune from 10-50, depending on the scale of the local cellular pattern. |
+| `feature_neighbor` | `SNAP_Dataset()` | Number of nearest neighbors to consider when linking nodes (cells) on the feature (e.g., protein expression) similarity graph for GNN training. | 15 | No need to change in most cases. |
+| `spatial_neighbor` | `SNAP_Dataset()` | Number of nearest neighbors to consider when linking nodes (cells) on the spatial (location) similarity graph for GNN training. | 15 | No need to change in most cases. |
+| `pca_components` | `.initialize()` | Number of components to use on the PCA reduced feature expression input. | 25 | Similar to conventional PCA selection, e.g., in scRNA-seq studies. User should decide. |
+| `celltype` | `.initialize()` | Column to use as initial cell type labels. If ‘feature_labels’, Leiden clustering will generate the labels, otherwise, the user can provide pre-defined labels. | `feature_labels` | If no pre-generated cell type information is available, use the default; otherwise, supply known labels. |
+| `cluster_res` | `.initialize()` | Resolution parameter for Leiden clustering to determine initial labels for CellLENS model input. | 0.5 | Works in most cases. Adjust if dataset is too large or small; monitor verbose printouts. Generally, 8-15 types yield optimal results. |
+| `n_clusters` | `.initialize()` | Number of clusters to generate during Leiden clustering. If `None`, resolution is used instead. | None | User can specify 8-15 clusters instead of resolution. |
+| `size` | `.prepare_images()` | Pixel size for cropping individual cell images used in CNN-based local tissue morphology analysis. | 512 | Depends on physical scale in modality. Typically, 50-200 μm works well. |
+| `truncation` | `.prepare_images()` | Pixel intensity quantile for binarizing (0,1) CNN model inputs. | 0.9 | Typically, 0.7-0.9 works well. Users should visually check images before proceeding. |
+| `cnn_latent_dim` | `CellSNAP()` | Size of the latent dimension (extracted image features) from CNN. | 128 | No need to change in most cases. |
+| `gnn_latent_dim` | `CellSNAP()` | Size of the latent dimension (extracted fused representation) from the duo-GNN model. | 32 | No need to change in most cases. |
+| `fc_out_dim` | `CellSNAP()` | Output dimension for expression-GNN, used as MLP head input. Larger values emphasize expression-related features. | 33 | No need to change in most cases. |
+| `cnn_out_dim` | `CellSNAP()` | Output dimension for spatial-GNN, used as MLP head input. Larger values emphasize morphological features. | 11 | No need to change in most cases. |
+| `round` | `.get_snap_embedding()` | Number of training rounds for the CellLENS duo-GNN model. Repeated training ensures robust representation. | 5 | No need to change in most cases. |
+| `k` | `.get_snap_embedding()` | SVD is run on embeddings from repeated duo-GNN training rounds. This defines the final representation's dimensions. | 32 | No need to change in most cases. |
+
+---
+
