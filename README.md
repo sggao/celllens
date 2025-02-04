@@ -47,8 +47,6 @@ For usage details, check out our **[tutorials](#-tutorials)**.
 
 ## ⚙️ Key Parameters & Recommendations
 
-## Key Parameters and Their Explanation and Recommendations
-
 | Name               | Function             | Description  | Recommendation |
 |-------------------|----------------------|------------------|----------------|
 | `nbhd_composition` | `SNAP_Dataset()` | Number of nearest neighbors (cells) to consider when calculating the ‘neighborhood composition vector’. This vector is involved in the CellLENS training to learn local cellular patterns. <br> **Default = 20** | Generally no need to change this parameter. Could tune from 10-50, depending on the scale of the local cellular pattern wanted to learn in the tissue. |
