@@ -70,7 +70,7 @@ For usage details, check out our **[tutorials](#-tutorials)**.
 If you find **CellLENS** useful, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2024.05.12.593710v1).
 ```
 @article{yourcitation2024,
-  author    = {Your Name et al.},
+  author    = {Zhu, Bokai, et al.},
   title     = {CellLENS: A Spatial Multi-Omics Representation Learning Method},
   journal   = {bioRxiv},
   year      = {2024},
