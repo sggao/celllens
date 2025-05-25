@@ -25,7 +25,7 @@ CellLENS is hosted on `pypi` and can be installed via `pip`. We recommend workin
 ```bash
 conda create -n celllens python=3.9   # Create a new environment
 conda activate celllens               # Activate environment
-pip install celllens==0.1.0           # Install CellLENS
+pip install celllens           # Install CellLENS
 ```
 After installation, import the module as:
 ```python
