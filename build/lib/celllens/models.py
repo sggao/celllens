@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
+from transformers import ViTHybridForImageClassification, ViTModel
 
 
 class LENS_GNN_LITE(nn.Module):
@@ -26,8 +27,6 @@ class LENS_GNN_LITE(nn.Module):
         x = F.relu(self.encoder(x, edge_index))
         x = self.gnn_conv2(x, edge_index)
         return x
-
-
 
 
 class LENS_GNN_DUO(nn.Module):
@@ -96,9 +95,10 @@ class LENS_CNN(nn.Module):
     For more detail technical description of the model please refer to the CellLENS manuscript.
     """
 
-    def __init__(self, cnn_latent_dim, output_dim):
+    def __init__(self, cnn_latent_dim, output_dim, input_channel_num):
         super().__init__()
-        self.conv1 = nn.Conv2d(2, 16, kernel_size=2, stride=2)
+        
+        self.conv1 = nn.Conv2d(input_channel_num, 16, kernel_size=2, stride=2)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1)
         self.conv3 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
@@ -127,3 +127,37 @@ class LENS_CNN(nn.Module):
         x = self.cnn_encoder(x)
         x = self.fc4(F.relu(x))
         return x
+
+class ViT(nn.Module):
+
+    """
+    Model class. ViT transformer model used for extracting tissue morphology information from images.
+    Use if less sensitive to computing resources.
+    """
+
+    def __init__(self, cnn_latent_dim, output_dim, input_channel_num):
+        super(ViT, self).__init__()
+        self.input_channel_num = input_channel_num
+        self.vit_base = ViTModel.from_pretrained(
+            'google/vit-base-patch16-224-in21k',
+            ignore_mismatched_sizes=True  
+        )
+        self.fc1 = nn.Linear(self.vit_base.config.hidden_size, 512)
+        self.fc2 = nn.Linear(512, cnn_latent_dim)
+        self.fc3 = nn.Linear(cnn_latent_dim, output_dim)
+        self.channel_adjust = nn.Conv2d(self.input_channel_num, 3, kernel_size=1, stride=1)
+        
+    def cnn_encoder(self, x):
+        input_data = self.channel_adjust(x)
+        input_data_resized = F.interpolate(input_data, size=(224, 224), mode='bilinear') 
+        vit_outputs = self.vit_base(pixel_values=input_data_resized)
+        cls_token_output = vit_outputs.last_hidden_state[:, 0]  # CLS token
+        x = F.relu(self.fc1(cls_token_output))
+        x = F.relu(self.fc2(x))
+        return x
+
+    def forward(self, x):
+        x = self.cnn_encoder(x)  # torch.Size([batch_size, 128])
+        logits = self.fc3(x)
+        return logits
+

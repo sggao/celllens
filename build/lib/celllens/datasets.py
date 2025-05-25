@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
+import torch.nn as nn
 import os
 import numpy as np
 import pandas as pd
@@ -43,7 +44,7 @@ class LENS_Dataset(Dataset):
         path2img : str, optional
             Path to images (to be saved, output from function '.prepare_images') if using images to extract morphological information (CNN step)
         use_transform : bool
-            Indicate whether to use data augmentation if using images to extract morphological information (CNN step)
+            Indicate whether to use data augmentation if using images to extract morphological information (CNN step). Suggest avoiding using transformation.
 
         """
 
@@ -61,6 +62,8 @@ class LENS_Dataset(Dataset):
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomVerticalFlip()
             ])
+        else:
+            self.transform = nn.Identity()
 
     def __len__(self):
         return self.labels.shape[0]

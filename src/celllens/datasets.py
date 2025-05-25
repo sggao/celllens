@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
+import torch.nn as nn
 import os
 import numpy as np
 import pandas as pd
@@ -61,6 +62,8 @@ class LENS_Dataset(Dataset):
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomVerticalFlip()
             ])
+        else:
+            self.transform = nn.Identity()
 
     def __len__(self):
         return self.labels.shape[0]

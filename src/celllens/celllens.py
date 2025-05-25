@@ -83,6 +83,7 @@ class CellLENS:
                      SchedulerAlg=None,
                      scheduler_kwargs=None,
                      print_every=10,
+                     num_workers=4, 
                      cnn_model='CNN',
                      use_amp=False):
         """
@@ -124,7 +125,7 @@ class CellLENS:
         dataloader = torch.utils.data.DataLoader(self.dataset,
                                                  batch_size=batch_size,
                                                  shuffle=True,
-                                                 num_workers=4,
+                                                 num_workers=num_workers,
                                                  pin_memory=True,)
         criterion = getattr(nn, loss_fn, nn.MSELoss)()
 
@@ -198,8 +199,7 @@ class CellLENS:
         self.dataset.use_transform = False
         testloader = torch.utils.data.DataLoader(self.dataset,
                                                  batch_size=batch_size,
-                                                 shuffle=False,
-                                                 num_workers=2)
+                                                 shuffle=False)
         self.cnn_model.to(self.device)
         self.cnn_model.eval()
         self.cnn_embedding = np.zeros(

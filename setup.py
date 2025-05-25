@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="celllens",
-    version="0.1.0",
+    version="0.1.1",
     author="Sheng Gao, Bokai Zhu",
     author_email="gaosheng0321@gmail.com, zhubokai@mit.edu",
     description="A package for enhancing single-cell population delineation by integrating cross-domain information.",
