@@ -15,8 +15,6 @@
 
 For more details, see our [paper](https://www.nature.com/articles/s41590-025-02163-1).
 
-> ⚠️ **Active Development:** This repository is under active development. The current version is for **reviewing and early access testing**. A full installation guide and tutorial will be available soon.
-
 ---
 
 ## 🚀 Installation
