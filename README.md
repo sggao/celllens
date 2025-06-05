@@ -13,7 +13,7 @@
 ## 📌 Overview
 **Cell Local Environment Neighborhood Scan (CellLENS)** is a computational method that integrates cross-domain information from tissue samples to learn a single-cell representation embedding. By analyzing spatial proteomic and spatial transcriptomic datasets across different tissue types and disease settings, CellLENS identifies biologically relevant cell populations that were previously challenging to detect due to lost tissue morphological information.
 
-For more details, see our [preprint](https://www.biorxiv.org/content/10.1101/2024.05.12.593710v1).
+For more details, see our [paper](https://www.nature.com/articles/s41590-025-02163-1).
 
 > ⚠️ **Active Development:** This repository is under active development. The current version is for **reviewing and early access testing**. A full installation guide and tutorial will be available soon.
 
@@ -69,14 +69,16 @@ For usage details, check out our **[tutorials](#-tutorials)**.
 
 
 ## 📢 Citation
-If you find **CellLENS** useful, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2024.05.12.593710v1).
+If you find **CellLENS** useful, please cite our [paper](https://www.nature.com/articles/s41590-025-02163-1).
 ```
-@article{zhu2024cross,
-  title={Cross-domain information fusion for enhanced cell population delineation in single-cell spatial-omics data},
-  author={Zhu, Bokai and Gao, Sheng and Chen, Shuxiao and Yeung, Jason and Bai, Yunhao and Huang, Amy Y and Yeo, Yao Yu and Liao, Guanrui and Mao, Shulin and Jiang, Zhenghui G and others},
-  journal={bioRxiv},
-  year={2024},
-  publisher={Cold Spring Harbor Laboratory Preprints}
+@article{Zhu2025CellLENS,
+  author = {Zhu, Bokai and Gao, Sheng and Chen, Shuxiao and Wang, Yuchen and Yeung, Jason and Bai, Yunhao and Huang, Amy Y. and Yeo, Yao Yu and Liao, Guanrui and Mao, Shulin and Jiang, Zhenghui G. and Rodig, Scott J. and Wong, Ka-Chun and Shalek, Alex K. and Nolan, Garry P. and Jiang, Sizun and Ma, Zongming},
+  title = {CellLENS enables cross-domain information fusion for enhanced cell population delineation in single-cell spatial omics data},
+  journal = {Nature Immunology},
+  volume = {26},
+  pages = {963--974},
+  year = {2025},
+  doi = {10.1038/s41590-025-02163-1}
 }
 ```
 
