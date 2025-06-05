@@ -41,6 +41,8 @@ For usage details, check out our **[tutorials](#-tutorials)**.
 
 📌 **[Tutorial II](https://github.com/sggao/celllens/blob/main/tutorials/Tutorial_Full_CellLENS.ipynb)** - Full version using feature expression, cell locations, & tissue images.
 
+📌 **[Tutorial II.v2 - quick Xenium example](https://github.com/sggao/celllens/blob/main/tutorials/Tutorial_Full_CellLENS(Xenium).ipynb)** - Similar to Tutorial II but using Xenium data as an example.
+
 📌 **[Tutorial III](https://github.com/sggao/celllens/blob/main/tutorials/Optionl_Tutorial_Full_CellLENS-ViT.ipynb)** - Advanced usage with **ViT-based** image feature learning.
 
 ---
